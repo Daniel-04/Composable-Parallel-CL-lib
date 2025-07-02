@@ -1,0 +1,68 @@
+#ifndef CL_UTILS_H_
+#define CL_UTILS_H_
+
+#ifndef CL_TARGET_OPENCL_VERSION
+#define CL_TARGET_OPENCL_VERSION 300
+#endif
+#ifndef DEVICE_TYPE
+#define DEVICE_TYPE CL_DEVICE_TYPE_GPU
+#endif
+#include <CL/cl.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#define _STR(x) #x
+#define _EXPAND(x) _STR(x)
+/*
+** Coverts contents into a string after expanding macros, does not break syntax
+** highlight, eases writing OpenCL kernels in c source files.
+*/
+#define RAW(...) _EXPAND(__VA_ARGS__)
+
+const char *_cl_err_to_str(cl_int err);
+void _check_cl(cl_int err, const char *expr);
+#define _GET_CHECK_CL(_1, _2, NAME, ...) NAME
+#define _CHECK_CL_ONE(expr) _check_cl((expr), #expr)
+#define _CHECK_CL_TWO(expr, err) expr; _check_cl(err, #expr)
+#define CHECK_CL(...) _GET_CHECK_CL(__VA_ARGS__, _CHECK_CL_TWO, _CHECK_CL_ONE)(__VA_ARGS__)
+
+void _log_cl_event_time(cl_event event, const char *expr);
+#define LOG_CL_EVENT_TIME(event) _log_cl_event_time((event), #event)
+
+/*
+** Pointer to beggining of contiguous array of up to 3 dimensions, preceded by
+** related data. Allows for direct indexing of host array, while carrying
+** information needed by library helper functions (i.e ((int*) array)[93] = 42).
+** [cl_mem, dim3, dim2, dim1, ...host data...]
+**      -4    -3    -2    -1| 0 ^ pointer returned to user
+**      ^ metadata accessed with helper macros
+*/
+typedef void*  cl_array;
+
+#define CL_ARRAY_HEADER_SIZE (sizeof(cl_mem) + sizeof(size_t)*3)
+#define CL_ARRAY_BASE_PTR(arr) ((unsigned char *)(arr) - CL_ARRAY_HEADER_SIZE)
+#define CL_ARRAY_MEM(arr)    (*((cl_mem *)CL_ARRAY_BASE_PTR(arr)))
+#define CL_ARRAY_DIM3(arr)   (*((size_t *)((unsigned char *) arr) + sizeof(cl_mem)) - 3)
+#define CL_ARRAY_DIM2(arr)   (*((size_t *)((unsigned char *) arr) + sizeof(cl_mem)) - 2)
+#define CL_ARRAY_DIM1(arr)   (*((size_t *)((unsigned char *) arr) + sizeof(cl_mem)) - 1)
+
+/*
+** Allocate host memory for array of given dimensions. Can return NULL on
+** failure to allocate memory. Does not allocate device memory.
+*/
+cl_array _alloc_cl_array(size_t dim1, size_t dim2, size_t dim3);
+void free_cl_array(cl_array arr);
+
+#define _GET_ALLOC_CL_ARRAY(_1, _2, _3, NAME, ...) NAME
+#define _ALLOC_CL_ARRAY_ONE(dim1) _alloc_cl_array(dim1, 1, 1)
+#define _ALLOC_CL_ARRAY_TWO(dim1, dim2) _alloc_cl_array(dim1, dim2, 1)
+#define _ALLOC_CL_ARRAY_THREE(dim1, dim2, dim3)                                \
+    _alloc_cl_array(dim1, dim2, dim3)
+#define ALLOC_CL_ARRAY(...)                                                    \
+    _GET_ALLOC_CL_ARRAY(__VA_ARGS__, _ALLOC_CL_ARRAY_THREE,                    \
+                        _ALLOC_CL_ARRAY_TWO,                                   \
+                        _ALLOC_CL_ARRAY_ONE)(__VAR_ARGS__)
+
+#define FREE_CL_ARRAY(arr) free_cl_array(arr)
+
+#endif // CL_UTILS_H_
