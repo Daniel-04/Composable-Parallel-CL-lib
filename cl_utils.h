@@ -37,39 +37,39 @@ void _log_cl_event_time(cl_event event, const char *expr);
 **      -4    -3    -2    -1| 0 ^ pointer returned to user
 **      ^ metadata accessed with helper macros
 */
-typedef void*  cl_array;
+typedef void*  array;
 
-#define CL_ARRAY_HEADER_SIZE (sizeof(cl_mem) + sizeof(size_t)*3)
-#define CL_ARRAY_BASE_PTR(arr) ((unsigned char *)(arr) - CL_ARRAY_HEADER_SIZE)
-#define CL_ARRAY_MEM(arr)    (*((cl_mem *)CL_ARRAY_BASE_PTR(arr)))
-#define CL_ARRAY_DIM3(arr)   (*((size_t *)((unsigned char *) arr) + sizeof(cl_mem)) - 3)
-#define CL_ARRAY_DIM2(arr)   (*((size_t *)((unsigned char *) arr) + sizeof(cl_mem)) - 2)
-#define CL_ARRAY_DIM1(arr)   (*((size_t *)((unsigned char *) arr) + sizeof(cl_mem)) - 1)
+#define ARRAY_HEADER_SIZE (sizeof(cl_mem) + sizeof(size_t)*3)
+#define ARRAY_BASE_PTR(arr) ((unsigned char *)(arr) - ARRAY_HEADER_SIZE)
+#define ARRAY_MEM(arr)    (*((cl_mem *)ARRAY_BASE_PTR(arr)))
+#define ARRAY_DIM3(arr)   (*((size_t *)((unsigned char *) arr) + sizeof(cl_mem)) - 3)
+#define ARRAY_DIM2(arr)   (*((size_t *)((unsigned char *) arr) + sizeof(cl_mem)) - 2)
+#define ARRAY_DIM1(arr)   (*((size_t *)((unsigned char *) arr) + sizeof(cl_mem)) - 1)
 
 /*
 ** Allocate host memory for array of given dimensions. Can return NULL on
 ** failure to allocate memory. Does not allocate device memory.
 */
-cl_array _alloc_cl_array(size_t membsize, size_t dim1, size_t dim2, size_t dim3);
-void free_cl_array(cl_array arr);
+array _alloc_array(size_t membsize, size_t dim1, size_t dim2, size_t dim3);
+void free_array(array arr);
 
-#define _GET_ALLOC_CL_ARRAY(_1, _2, _3, NAME, ...) NAME
-#define _ALLOC_CL_ARRAY_ONE(membsize, dim1)                                    \
-    _alloc_cl_array(membsize, dim1, 1, 1)
-#define _ALLOC_CL_ARRAY_TWO(membsize, dim1, dim2)                              \
-    _alloc_cl_array(membsize, dim1, dim2, 1)
-#define _ALLOC_CL_ARRAY_THREE(membsize, dim1, dim2, dim3)                      \
-    _alloc_cl_array(membsize, dim1, dim2, dim3)
-#define ALLOC_CL_ARRAY(...)                                                    \
-    _GET_ALLOC_CL_ARRAY(__VA_ARGS__, _ALLOC_CL_ARRAY_THREE,                    \
-                        _ALLOC_CL_ARRAY_TWO,                                   \
-                        _ALLOC_CL_ARRAY_ONE)(sizeof(unsigned char), __VA_ARGS__)
-#define ALLOC_CL_ARRAY_T(type, ...)                                            \
-    _GET_ALLOC_CL_ARRAY(__VA_ARGS__, _ALLOC_CL_ARRAY_THREE,                    \
-                        _ALLOC_CL_ARRAY_TWO,                                   \
-                        _ALLOC_CL_ARRAY_ONE)(sizeof(type), __VA_ARGS__)
+#define _GET_ALLOC_ARRAY(_1, _2, _3, NAME, ...) NAME
+#define _ALLOC_ARRAY_ONE(membsize, dim1)                                    \
+    _alloc_array(membsize, dim1, 1, 1)
+#define _ALLOC_ARRAY_TWO(membsize, dim1, dim2)                              \
+    _alloc_array(membsize, dim1, dim2, 1)
+#define _ALLOC_ARRAY_THREE(membsize, dim1, dim2, dim3)                      \
+    _alloc_array(membsize, dim1, dim2, dim3)
+#define ALLOC_ARRAY(...)                                                    \
+    _GET_ALLOC_ARRAY(__VA_ARGS__, _ALLOC_ARRAY_THREE,                    \
+                        _ALLOC_ARRAY_TWO,                                   \
+                        _ALLOC_ARRAY_ONE)(sizeof(unsigned char), __VA_ARGS__)
+#define ALLOC_ARRAY_T(type, ...)                                            \
+    _GET_ALLOC_ARRAY(__VA_ARGS__, _ALLOC_ARRAY_THREE,                    \
+                        _ALLOC_ARRAY_TWO,                                   \
+                        _ALLOC_ARRAY_ONE)(sizeof(type), __VA_ARGS__)
 
-#define FREE_CL_ARRAY(arr) free_cl_array(arr)
+#define FREE_ARRAY(arr) free_array(arr)
 
 
 static cl_platform_id platform;

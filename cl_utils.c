@@ -156,24 +156,24 @@ void _log_cl_event_time(cl_event event, const char *expr) {
     CHECK_CL(clReleaseEvent(event));
 }
 
-cl_array _alloc_cl_array(size_t membsize, size_t dim1, size_t dim2, size_t dim3) {
-    size_t total_size = CL_ARRAY_HEADER_SIZE + dim1 * dim2 * dim3;
+array _alloc_array(size_t membsize, size_t dim1, size_t dim2, size_t dim3) {
+    size_t total_size = ARRAY_HEADER_SIZE + dim1 * dim2 * dim3;
 
-    void *array = malloc(total_size * membsize);
-    if (!array) {
+    void *arr = malloc(total_size * membsize);
+    if (!arr) {
         return NULL;
     }
 
-    ((cl_mem *)array)[0] = NULL;
-    ((size_t *)(array + sizeof(cl_mem)))[0] = dim3;
-    ((size_t *)(array + sizeof(cl_mem)))[1] = dim2;
-    ((size_t *)(array + sizeof(cl_mem)))[2] = dim1;
+    ((cl_mem *)arr)[0] = NULL;
+    ((size_t *)(arr + sizeof(cl_mem)))[0] = dim3;
+    ((size_t *)(arr + sizeof(cl_mem)))[1] = dim2;
+    ((size_t *)(arr + sizeof(cl_mem)))[2] = dim1;
 
-    return (void *)(array + CL_ARRAY_HEADER_SIZE);
+    return (void *)(arr + ARRAY_HEADER_SIZE);
 }
 
-void free_cl_array(cl_array arr) {
-    free(CL_ARRAY_BASE_PTR(arr));
+void free_array(array arr) {
+    free(ARRAY_BASE_PTR(arr));
 }
 
 void init_cl_pipeline() {
