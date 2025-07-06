@@ -50,18 +50,24 @@ typedef void*  cl_array;
 ** Allocate host memory for array of given dimensions. Can return NULL on
 ** failure to allocate memory. Does not allocate device memory.
 */
-cl_array _alloc_cl_array(size_t dim1, size_t dim2, size_t dim3);
+cl_array _alloc_cl_array(size_t membsize, size_t dim1, size_t dim2, size_t dim3);
 void free_cl_array(cl_array arr);
 
 #define _GET_ALLOC_CL_ARRAY(_1, _2, _3, NAME, ...) NAME
-#define _ALLOC_CL_ARRAY_ONE(dim1) _alloc_cl_array(dim1, 1, 1)
-#define _ALLOC_CL_ARRAY_TWO(dim1, dim2) _alloc_cl_array(dim1, dim2, 1)
-#define _ALLOC_CL_ARRAY_THREE(dim1, dim2, dim3)                                \
-    _alloc_cl_array(dim1, dim2, dim3)
+#define _ALLOC_CL_ARRAY_ONE(membsize, dim1)                                    \
+    _alloc_cl_array(membsize, dim1, 1, 1)
+#define _ALLOC_CL_ARRAY_TWO(membsize, dim1, dim2)                              \
+    _alloc_cl_array(membsize, dim1, dim2, 1)
+#define _ALLOC_CL_ARRAY_THREE(membsize, dim1, dim2, dim3)                      \
+    _alloc_cl_array(membsize, dim1, dim2, dim3)
 #define ALLOC_CL_ARRAY(...)                                                    \
     _GET_ALLOC_CL_ARRAY(__VA_ARGS__, _ALLOC_CL_ARRAY_THREE,                    \
                         _ALLOC_CL_ARRAY_TWO,                                   \
-                        _ALLOC_CL_ARRAY_ONE)(__VA_ARGS__)
+                        _ALLOC_CL_ARRAY_ONE)(sizeof(unsigned char), __VA_ARGS__)
+#define ALLOC_CL_ARRAY_T(type, ...)                                            \
+    _GET_ALLOC_CL_ARRAY(__VA_ARGS__, _ALLOC_CL_ARRAY_THREE,                    \
+                        _ALLOC_CL_ARRAY_TWO,                                   \
+                        _ALLOC_CL_ARRAY_ONE)(sizeof(type), __VA_ARGS__)
 
 #define FREE_CL_ARRAY(arr) free_cl_array(arr)
 

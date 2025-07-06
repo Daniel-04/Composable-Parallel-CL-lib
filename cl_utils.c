@@ -156,10 +156,10 @@ void _log_cl_event_time(cl_event event, const char *expr) {
     CHECK_CL(clReleaseEvent(event));
 }
 
-cl_array _alloc_cl_array(size_t dim1, size_t dim2, size_t dim3) {
+cl_array _alloc_cl_array(size_t membsize, size_t dim1, size_t dim2, size_t dim3) {
     size_t total_size = CL_ARRAY_HEADER_SIZE + dim1 * dim2 * dim3;
 
-    void *array = malloc(total_size);
+    void *array = malloc(total_size * membsize);
     if (!array) {
         return NULL;
     }
