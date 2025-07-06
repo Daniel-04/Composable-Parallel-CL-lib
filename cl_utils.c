@@ -175,3 +175,11 @@ cl_array _alloc_cl_array(size_t dim1, size_t dim2, size_t dim3) {
 void free_cl_array(cl_array arr) {
     free(CL_ARRAY_BASE_PTR(arr));
 }
+
+void init_cl_pipeline() {
+    cl_int err;
+    CHECK_CL(clGetPlatformIDs(1, &platform, NULL));
+    CHECK_CL(clGetDeviceIDs(platform, CL_DEVICE_TYPE_GPU, 1, &device, NULL));
+    context = CHECK_CL(clCreateContext(NULL, 1, &device, NULL, NULL, &err), err);
+    queue = CHECK_CL(clCreateCommandQueueWithProperties(context, device, NULL, &err), err);
+}

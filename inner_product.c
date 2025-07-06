@@ -35,7 +35,7 @@
 ** 16. OP1
 ** 17. OP2
 */
-const char *_inner_product_fmt = RAW(__kernel void inner(
+const char *_inner_product_fmt = RAW(__kernel void entry(
     const int M1, const int N2, const int N1, __global const %s *A,
     __global const %s *B, __global %s *C) {
     int row = get_global_id(1);

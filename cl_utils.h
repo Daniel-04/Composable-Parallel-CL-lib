@@ -65,4 +65,11 @@ void free_cl_array(cl_array arr);
 
 #define FREE_CL_ARRAY(arr) free_cl_array(arr)
 
+
+static cl_platform_id platform;
+static cl_device_id device;
+static cl_context context;
+static cl_command_queue queue;
+void init_cl_pipeline();
+
 #endif // CL_UTILS_H_
