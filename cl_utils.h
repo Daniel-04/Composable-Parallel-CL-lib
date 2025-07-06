@@ -42,9 +42,9 @@ typedef void*  array;
 #define ARRAY_HEADER_SIZE (sizeof(cl_mem) + sizeof(size_t)*3)
 #define ARRAY_BASE_PTR(arr) ((unsigned char *)(arr) - ARRAY_HEADER_SIZE)
 #define ARRAY_MEM(arr)    (*((cl_mem *)ARRAY_BASE_PTR(arr)))
-#define ARRAY_DIM3(arr)   (*((size_t *)((cl_mem *) arr) + 1) - 3)
-#define ARRAY_DIM2(arr)   (*((size_t *)((cl_mem *) arr) + 1) - 2)
-#define ARRAY_DIM1(arr)   (*((size_t *)((cl_mem *) arr) + 1) - 1)
+#define ARRAY_DIM3(arr)   (*(((size_t *) arr) - 3))
+#define ARRAY_DIM2(arr)   (*(((size_t *) arr) - 2))
+#define ARRAY_DIM1(arr)   (*(((size_t *) arr) - 1))
 #define ARRAY_SIZE(arr)   (ARRAY_DIM1(arr) * ARRAY_DIM2(arr) * ARRAY_DIM3(arr))
 
 /*
