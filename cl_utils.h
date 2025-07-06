@@ -61,7 +61,7 @@ void free_cl_array(cl_array arr);
 #define ALLOC_CL_ARRAY(...)                                                    \
     _GET_ALLOC_CL_ARRAY(__VA_ARGS__, _ALLOC_CL_ARRAY_THREE,                    \
                         _ALLOC_CL_ARRAY_TWO,                                   \
-                        _ALLOC_CL_ARRAY_ONE)(__VAR_ARGS__)
+                        _ALLOC_CL_ARRAY_ONE)(__VA_ARGS__)
 
 #define FREE_CL_ARRAY(arr) free_cl_array(arr)
 
