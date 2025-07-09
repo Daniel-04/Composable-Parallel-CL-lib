@@ -19,7 +19,7 @@
 ** M1 | ..
 **    | ..
 **
-** M2 = N1
+** For matrix multiplication: M2 must equal N1
 */
 int main() {
   cl_event kernel_event, mem_a_write, mem_b_write, mem_c_read;
@@ -48,7 +48,7 @@ int main() {
   float *B = malloc(sizeof(float) * B_s);
   float *C = malloc(sizeof(float) * C_s);
   if (!A || !B || !C) {
-    fprintf(stderr, "Host mallocation failed.\n");
+    fprintf(stderr, "Host allocation failed.\n");
     return 1;
   }
 
@@ -65,7 +65,7 @@ int main() {
   cl_mem B_d = CHECK_CL(clCreateBuffer(context, CL_MEM_READ_ONLY,
                                        sizeof(float) * B_s, NULL, &err),
                         err);
-  CHECK_CL(clEnqueueWriteBuffer(queue, B_d, CL_FALSE, 0, sizeof(float) * B_s, A,
+  CHECK_CL(clEnqueueWriteBuffer(queue, B_d, CL_FALSE, 0, sizeof(float) * B_s, B,
                                 0, NULL, &mem_b_write));
 
   cl_mem C_d = CHECK_CL(clCreateBuffer(context, CL_MEM_WRITE_ONLY,
@@ -73,6 +73,10 @@ int main() {
                         err);
 
   char *mmul_src = _get_inner_product("float", "+", "*");
+  if (!mmul_src) {
+    fprintf(stderr, "Failed to generate kernel source.\n");
+    return 1;
+  }
   printf("%s\n", mmul_src);
   cl_program program = CHECK_CL(clCreateProgramWithSource(
       context, 1, (const char **)&mmul_src, NULL, &err), err);
@@ -109,6 +113,8 @@ int main() {
   CHECK_CL(clReleaseMemObject(A_d));
   CHECK_CL(clReleaseMemObject(B_d));
   CHECK_CL(clReleaseMemObject(C_d));
+  CHECK_CL(clReleaseKernel(kern));
+  CHECK_CL(clReleaseProgram(program));
   CHECK_CL(clReleaseDevice(device));
   CHECK_CL(clReleaseContext(context));
   CHECK_CL(clReleaseCommandQueue(queue));
