@@ -49,27 +49,26 @@ typedef struct {
 } array;
 
 /*
-** Allocate host memory for array of given dimensions. Can return NULL on
-** failure to allocate memory. Does not allocate device memory.
+** Allocate memory for array of given dimensions, on host and device.
 */
-array _alloc_array(size_t membsize, size_t dim1, size_t dim2, size_t dim3);
+array _alloc_array(size_t membsize, cl_mem_flags flags, size_t dim1, size_t dim2, size_t dim3);
 void free_array(array arr);
 
 #define _GET_ALLOC_ARRAY(_1, _2, _3, NAME, ...) NAME
-#define _ALLOC_ARRAY_ONE(membsize, dim1)                                    \
-    _alloc_array(membsize, dim1, 1, 1)
-#define _ALLOC_ARRAY_TWO(membsize, dim1, dim2)                              \
-    _alloc_array(membsize, dim1, dim2, 1)
-#define _ALLOC_ARRAY_THREE(membsize, dim1, dim2, dim3)                      \
-    _alloc_array(membsize, dim1, dim2, dim3)
-#define ALLOC_ARRAY(...)                                                    \
-    _GET_ALLOC_ARRAY(__VA_ARGS__, _ALLOC_ARRAY_THREE,                    \
+#define _ALLOC_ARRAY_ONE(membsize, flags, dim1)                                    \
+    _alloc_array(membsize, flags, dim1, 1, 1)
+#define _ALLOC_ARRAY_TWO(membsize, flags, dim1, dim2)                              \
+    _alloc_array(membsize, flags, dim1, dim2, 1)
+#define _ALLOC_ARRAY_THREE(membsize, flags, dim1, dim2, dim3)                      \
+    _alloc_array(membsize, flags, dim1, dim2, dim3)
+#define ALLOC_ARRAY(type, flags, ...) \
+    _GET_ALLOC_ARRAY(__VA_ARGS__, _ALLOC_ARRAY_THREE,                       \
                         _ALLOC_ARRAY_TWO,                                   \
-                        _ALLOC_ARRAY_ONE)(sizeof(unsigned char), __VA_ARGS__)
-#define ALLOC_ARRAY_T(type, ...)                                            \
-    _GET_ALLOC_ARRAY(__VA_ARGS__, _ALLOC_ARRAY_THREE,                    \
-                        _ALLOC_ARRAY_TWO,                                   \
-                        _ALLOC_ARRAY_ONE)(sizeof(type), __VA_ARGS__)
+                        _ALLOC_ARRAY_ONE)(sizeof(type), flags, __VA_ARGS__)
+
+#define ARRAY_SIZE(arr) (arr.dim1 * arr.dim2 * arr.dim3)
+
+// TODO: functions for sync host -> device, device -> host (with profiling opt args)
 
 #define FREE_ARRAY(arr) free_array(arr)
 

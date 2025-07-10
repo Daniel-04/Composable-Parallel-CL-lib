@@ -174,22 +174,31 @@ void _log_cl_event_time(cl_event event, const char *expr) {
     CHECK_CL(clReleaseEvent(event));
 }
 
-array _alloc_array(size_t membsize, size_t dim1, size_t dim2, size_t dim3) {
-    size_t total_size = ARRAY_HEADER_SIZE + dim1 * dim2 * dim3;
+array _alloc_array(size_t membsize, cl_mem_flags flags, size_t dim1, size_t dim2, size_t dim3) {
+    array arr;
+    size_t total_size = dim1 * dim2 * dim3;
 
-    void *arr = malloc(total_size * membsize);
-    if (!arr) {
-        return NULL;
+    arr.host = malloc(total_size * membsize);
+    if (!arr.host) {
+        fprintf(stderr, "Memory allocation error\n");
+        abort();
     }
 
-    ((cl_mem *)arr)[0] = NULL;
-    ((size_t *)(arr + sizeof(cl_mem)))[0] = dim3;
-    ((size_t *)(arr + sizeof(cl_mem)))[1] = dim2;
-    ((size_t *)(arr + sizeof(cl_mem)))[2] = dim1;
+    arr.dim1 = dim1;
+    arr.dim2 = dim2;
+    arr.dim3 = dim3;
 
-    return (void *)(arr + ARRAY_HEADER_SIZE);
+    void *host_ptr = NULL;
+    if ((flags & CL_MEM_COPY_HOST_PTR) || (flags & CL_MEM_USE_HOST_PTR)) {
+        host_ptr = arr.host;
+    }
+    cl_int err;
+    arr.device = CHECK_CL(clCreateBuffer(_context, flags, membsize * dim1 * dim2 * dim3, host_ptr, &err), err);
+
+    return arr;
 }
 
 void free_array(array arr) {
-    free(ARRAY_BASE_PTR(arr));
+    free(arr.host);
+    // TODO: free device mem, zero fields
 }
