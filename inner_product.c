@@ -5,17 +5,6 @@
 #include "inner_product.h"
 #include <stdio.h>
 
-/*
- * clEnqueueNDRangeKernel(queue, kern, 2, NULL, global_size, local_size, 0, NULL, &kernel_event);
- *                                     |  |     |            |           |  |     ↳ attach event to operation
- *                                     |  |     |            |           |  ↳ array of events to wait for
- *                                     |  |     |            |           ↳ number of events to wait for
- *                                     |  |     |            ↳ array of size of local dimension
- *                                     |  |     ↳ array of size of each dimension
- *                                     |  ↳ array of offsets for each dimension
- *                                     ↳ number of dimensions
-*/
-
 /* Format strings:
 ** 1. A type
 ** 2. B type
@@ -35,65 +24,63 @@
 ** 16. OP1
 ** 17. OP2
 */
-const char *_inner_product_fmt =
-    RAW(__kernel void entry(const int a1, const int a2, __global const % s * A,
-                            const int b1, const int b2, __global const % s * B,
-                            const int c1, const int c2, __global % s * C) {
-      int row = get_global_id(1);
-      int col = get_global_id(0);
+const char *_inner_product_fmt = RAW (__kernel void entry (
+    const int a1, const int a2, __global const % s * A, const int b1,
+    const int b2, __global const % s * B, const int c1, const int c2,
+    __global % s * C) {
+  int row = get_global_id (1);
+  int col = get_global_id (0);
 
-      int local_row = get_local_id(1);
-      int local_col = get_local_id(0);
+  int local_row = get_local_id (1);
+  int local_col = get_local_id (0);
 
-      int group_row = get_group_id(1);
-      int group_col = get_group_id(0);
+  int group_row = get_group_id (1);
+  int group_col = get_group_id (0);
 
-      __local % s A_tile[% d][% d];
-      __local % s B_tile[% d][% d];
+  __local % s A_tile[% d][% d];
+  __local % s B_tile[% d][% d];
 
-      % s acc = 0.0f;
+  % s acc = 0.0f;
 
-      for (int t = 0; t < (a1 + % d - 1) / % d; t++) {
-        int tiled_col_A = t * % d + local_col;
-        int tiled_row_B = t * % d + local_row;
+  for (int t = 0; t < (a1 + % d - 1) / % d; t++)
+    {
+      int tiled_col_A = t * % d + local_col;
+      int tiled_row_B = t * % d + local_row;
 
-        A_tile[local_row][local_col] =
-            (row < a2 && tiled_col_A < a1) ? A[row * a1 + tiled_col_A] : 0.0f;
-        B_tile[local_row][local_col] =
-            (tiled_row_B < b2 && col < b1) ? B[tiled_row_B * b1 + col] : 0.0f;
-        barrier(CLK_LOCAL_MEM_FENCE);
+      A_tile[local_row][local_col]
+          = (row < a2 && tiled_col_A < a1) ? A[row * a1 + tiled_col_A] : 0.0f;
+      B_tile[local_row][local_col]
+          = (tiled_row_B < b2 && col < b1) ? B[tiled_row_B * b1 + col] : 0.0f;
+      barrier (CLK_LOCAL_MEM_FENCE);
 
-        for (int k = 0; k < % d; ++k) {
-          acc = acc % s(A_tile[local_row][k] % s B_tile[k][local_col]);
+      for (int k = 0; k < % d; ++k)
+        {
+          acc = acc % s (A_tile[local_row][k] % s B_tile[k][local_col]);
         }
-        barrier(CLK_LOCAL_MEM_FENCE);
-      }
-
-      if (row < c2 && col < c1) {
-        C[row * c1 + col] = acc;
-      }
-    });
-
-char *_get_inner_product(const char *dtype, const char *op1, const char *op2) {
-    char *kernel = NULL;
-
-    int count = asprintf(
-        &kernel,
-        _inner_product_fmt,
-        dtype /* A type */,
-        dtype /* B type */,
-        dtype /* C type */,
-        dtype /* A_tile type */,
-        TILE_SIZE, TILE_SIZE,
-        dtype /* B_tile type */,
-        TILE_SIZE, TILE_SIZE,
-        dtype /* acc type */,
-        TILE_SIZE, TILE_SIZE, TILE_SIZE, TILE_SIZE, TILE_SIZE,
-        op1, op2);
-
-    if (count == -1) {
-        return NULL; /* ERROR */
+      barrier (CLK_LOCAL_MEM_FENCE);
     }
 
-    return kernel;
+  if (row < c2 && col < c1)
+    {
+      C[row * c1 + col] = acc;
+    }
+});
+
+char *
+_get_inner_product (const char *dtype, const char *op1, const char *op2)
+{
+  char *kernel = NULL;
+
+  int count = asprintf (
+      &kernel, _inner_product_fmt, dtype /* A type */, dtype /* B type */,
+      dtype /* C type */, dtype /* A_tile type */, TILE_SIZE, TILE_SIZE,
+      dtype /* B_tile type */, TILE_SIZE, TILE_SIZE, dtype /* acc type */,
+      TILE_SIZE, TILE_SIZE, TILE_SIZE, TILE_SIZE, TILE_SIZE, op1, op2);
+
+  if (count == -1)
+    {
+      return NULL; /* ERROR */
+    }
+
+  return kernel;
 }
