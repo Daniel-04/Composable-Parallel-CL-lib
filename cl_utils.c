@@ -3,6 +3,24 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+void copy_cl_pipeline(cl_platform_id *platform, cl_device_id *device, cl_context *context, cl_command_queue *queue) {
+    _platform = *platform;
+    _device = *device;
+    _context = *context;
+    _queue = *queue;
+}
+
+void setup_cl(cl_platform_id *platform, cl_device_id *device, cl_context *context, cl_command_queue *queue, cl_queue_properties *properties) {
+    cl_int err;
+    CHECK_CL(clGetPlatformIDs(1, platform, NULL));
+    CHECK_CL(clGetDeviceIDs(*platform, DEFAULT_CL_DEVICE, 1, device, NULL));
+    *context = CHECK_CL(clCreateContext(NULL, 1, device, NULL, NULL, &err), err);
+    *queue = CHECK_CL(
+        clCreateCommandQueueWithProperties(*context, *device, properties, &err), err);
+
+    copy_cl_pipeline(platform, device, context, queue); // For library use
+}
+
 const char *_cl_err_to_str(cl_int err) {
     switch (err) {
     case 0:
