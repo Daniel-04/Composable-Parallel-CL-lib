@@ -3,24 +3,6 @@
 #include <CL/cl.h>
 #include <stdio.h>
 
-/*
-**      N1
-**    A --
-** M1 | ..
-**    | ..
-**
-**      N2
-**    B --
-** M2 | ..
-**    | ..
-**
-**      N2
-**    C --
-** M1 | ..
-**    | ..
-**
-** M2 = N1
-*/
 int main() {
   cl_event kernel_event, mem_a_write, mem_b_write, mem_c_read;
   cl_int err;
@@ -31,46 +13,20 @@ int main() {
   const cl_queue_properties props[] = {CL_QUEUE_PROPERTIES,
                                        CL_QUEUE_PROFILING_ENABLE, 0};
 
-  CHECK_CL(clGetPlatformIDs(1, &platform, NULL));
-  CHECK_CL(clGetDeviceIDs(platform, CL_DEVICE_TYPE_GPU, 1, &device, NULL));
-  context = CHECK_CL(clCreateContext(NULL, 1, &device, NULL, NULL, &err), err);
-  queue = CHECK_CL(
-      clCreateCommandQueueWithProperties(context, device, props, &err), err);
+  setup_cl(&platform, &device, &context, &queue, props);
 
-  const int M1 = 4096;
-  const int N1 = 4096;
-  const int M2 = 4096;
-  const int N2 = 4096;
-  const int A_s = M1 * N1;
-  const int B_s = M2 * N2;
-  const int C_s = M1 * N2;
-  float *A = malloc(sizeof(float) * A_s);
-  float *B = malloc(sizeof(float) * B_s);
-  float *C = malloc(sizeof(float) * C_s);
-  if (!A || !B || !C) {
-    fprintf(stderr, "Host mallocation failed.\n");
-    return 1;
-  }
+  int a1, a2, b1, b2, c1, c2;
+  a1 = a2 = b1 = b2 = c1 = c2 = 4096;
 
-  for (int i = 0; i < A_s; i++)
-    A[i] = (float)(i % 100) / 10.0f;
-  for (int i = 0; i < B_s; i++)
-    B[i] = (float)(i % 100) / 10.0f;
-  cl_mem A_d = CHECK_CL(clCreateBuffer(context, CL_MEM_READ_ONLY,
-                                       sizeof(float) * A_s, NULL, &err),
-                        err);
-  CHECK_CL(clEnqueueWriteBuffer(queue, A_d, CL_FALSE, 0, sizeof(float) * A_s, A,
-                                0, NULL, &mem_a_write));
+  array A = ALLOC_ARRAY(float, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, a1, a2);
+  array B = ALLOC_ARRAY(float, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, b1, b2);
+  array C = ALLOC_ARRAY(float, CL_MEM_READ_WRITE, c1, c2);
 
-  cl_mem B_d = CHECK_CL(clCreateBuffer(context, CL_MEM_READ_ONLY,
-                                       sizeof(float) * B_s, NULL, &err),
-                        err);
-  CHECK_CL(clEnqueueWriteBuffer(queue, B_d, CL_FALSE, 0, sizeof(float) * B_s, A,
-                                0, NULL, &mem_b_write));
-
-  cl_mem C_d = CHECK_CL(clCreateBuffer(context, CL_MEM_WRITE_ONLY,
-                                       sizeof(float) * C_s, NULL, &err),
-                        err);
+  printf("%lu %lu %lu\n", A.dim1, A.dim2, A.membsize);
+  for (int i = 0; i < ARRAY_SIZE(A); i++)
+    ((float *)A.host)[i] = (float)(i % 100) / 10.0f;
+  for (int i = 0; i < ARRAY_SIZE(B); i++)
+    ((float *)B.host)[i] = (float)(i % 100) / 10.0f;
 
   char *mmul_src = _get_inner_product("float", "+", "*");
   printf("%s\n", mmul_src);
@@ -78,41 +34,44 @@ int main() {
       context, 1, (const char **)&mmul_src, NULL, &err), err);
   CHECK_CL(clBuildProgram(program, 1, &device, NULL, NULL, NULL));
 
-  cl_kernel kern = CHECK_CL(clCreateKernel(program, "inner", &err), err);
+  cl_kernel kern = CHECK_CL(clCreateKernel(program, "entry", &err), err);
 
-  CHECK_CL(clSetKernelArg(kern, 0, sizeof(int), &M1));
-  CHECK_CL(clSetKernelArg(kern, 1, sizeof(int), &N2));
-  CHECK_CL(clSetKernelArg(kern, 2, sizeof(int), &N1));
-  CHECK_CL(clSetKernelArg(kern, 3, sizeof(cl_mem), &A_d));
-  CHECK_CL(clSetKernelArg(kern, 4, sizeof(cl_mem), &B_d));
-  CHECK_CL(clSetKernelArg(kern, 5, sizeof(cl_mem), &C_d));
+  CHECK_CL(clSetKernelArg(kern, 0, sizeof(int), &a1));
+  CHECK_CL(clSetKernelArg(kern, 1, sizeof(int), &a2));
+  CHECK_CL(clSetKernelArg(kern, 2, sizeof(cl_mem), &A.device));
+  CHECK_CL(clSetKernelArg(kern, 3, sizeof(int), &b1));
+  CHECK_CL(clSetKernelArg(kern, 4, sizeof(int), &b2));
+  CHECK_CL(clSetKernelArg(kern, 5, sizeof(cl_mem), &B.device));
+  CHECK_CL(clSetKernelArg(kern, 6, sizeof(int), &c1));
+  CHECK_CL(clSetKernelArg(kern, 7, sizeof(int), &c2));
+  CHECK_CL(clSetKernelArg(kern, 8, sizeof(cl_mem), &C.device));
 
   size_t local_size[2] = {TILE_SIZE, TILE_SIZE};
-  size_t global_size[2] = {((N2 + TILE_SIZE - 1) / TILE_SIZE) * TILE_SIZE,
-                           ((M1 + TILE_SIZE - 1) / TILE_SIZE) * TILE_SIZE};
+  size_t global_size[2] = {((c1 + TILE_SIZE - 1) / TILE_SIZE) * TILE_SIZE,
+                           ((c2 + TILE_SIZE - 1) / TILE_SIZE) * TILE_SIZE};
 
   CHECK_CL(clEnqueueNDRangeKernel(queue, kern, 2, NULL, global_size, local_size,
                                   0, NULL, &kernel_event));
 
-  CHECK_CL(clEnqueueReadBuffer(queue, C_d, CL_TRUE, 0, sizeof(float) * C_s, C,
+  CHECK_CL(clEnqueueReadBuffer(queue, C.device, CL_TRUE, 0, sizeof(float) * ARRAY_SIZE(C), C.host,
                                0, NULL, &mem_c_read));
 
-  LOG_CL_EVENT_TIME(mem_a_write);
-  LOG_CL_EVENT_TIME(mem_b_write);
+  /* LOG_CL_EVENT_TIME(mem_a_write); */
+  /* LOG_CL_EVENT_TIME(mem_b_write); */
   LOG_CL_EVENT_TIME(kernel_event);
   LOG_CL_EVENT_TIME(mem_c_read);
 
-  free(A);
-  free(B);
-  free(C);
+  /* free(A); */
+  /* free(B); */
+  /* free(C); */
 
-  CHECK_CL(clReleaseMemObject(A_d));
-  CHECK_CL(clReleaseMemObject(B_d));
-  CHECK_CL(clReleaseMemObject(C_d));
-  CHECK_CL(clReleaseDevice(device));
-  CHECK_CL(clReleaseContext(context));
-  CHECK_CL(clReleaseCommandQueue(queue));
-  free(mmul_src);
+  /* CHECK_CL(clReleaseMemObject(A_d)); */
+  /* CHECK_CL(clReleaseMemObject(B_d)); */
+  /* CHECK_CL(clReleaseMemObject(C_d)); */
+  /* CHECK_CL(clReleaseDevice(device)); */
+  /* CHECK_CL(clReleaseContext(context)); */
+  /* CHECK_CL(clReleaseCommandQueue(queue)); */
+  /* free(mmul_src); */
 
   return 0;
 }
