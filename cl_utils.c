@@ -187,6 +187,7 @@ array _alloc_array(size_t membsize, cl_mem_flags flags, size_t dim1, size_t dim2
     arr.dim1 = dim1;
     arr.dim2 = dim2;
     arr.dim3 = dim3;
+    arr.membsize = membsize;
 
     void *host_ptr = NULL;
     if ((flags & CL_MEM_COPY_HOST_PTR) || (flags & CL_MEM_USE_HOST_PTR)) {

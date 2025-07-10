@@ -22,7 +22,6 @@ int main() {
   array B = ALLOC_ARRAY(float, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, b1, b2);
   array C = ALLOC_ARRAY(float, CL_MEM_READ_WRITE, c1, c2);
 
-  printf("%lu %lu %lu\n", A.dim1, A.dim2, A.membsize);
   for (int i = 0; i < ARRAY_SIZE(A); i++)
     ((float *)A.host)[i] = (float)(i % 100) / 10.0f;
   for (int i = 0; i < ARRAY_SIZE(B); i++)
