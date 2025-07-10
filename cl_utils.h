@@ -20,32 +20,21 @@
 #define RAW(...) _EXPAND(__VA_ARGS__)
 
 const char *_cl_err_to_str(cl_int err);
-void _check_cl(cl_int err, const char *expr);
+void _check_cl(cl_int err, const char *expr, int line, const char *file);
 #define _GET_CHECK_CL(_1, _2, NAME, ...) NAME
-#define _CHECK_CL_ONE(expr) _check_cl((expr), #expr)
-#define _CHECK_CL_TWO(expr, err) expr; _check_cl(err, #expr)
+#define _CHECK_CL_ONE(expr) _check_cl((expr), #expr, __LINE__, __FILE__)
+#define _CHECK_CL_TWO(expr, err) expr; _check_cl(err, #expr, __LINE__, __FILE__)
 #define CHECK_CL(...) _GET_CHECK_CL(__VA_ARGS__, _CHECK_CL_TWO, _CHECK_CL_ONE)(__VA_ARGS__)
 
 void _log_cl_event_time(cl_event event, const char *expr);
 #define LOG_CL_EVENT_TIME(event) _log_cl_event_time((event), #event)
 
-/*
-** Pointer to beggining of contiguous array of up to 3 dimensions, preceded by
-** related data. Allows for direct indexing of host array, while carrying
-** information needed by library helper functions (i.e ((int*) array)[93] = 42).
-** [cl_mem, dim3, dim2, dim1, ...host data...]
-**      -4    -3    -2    -1| 0 ^ pointer returned to user
-**      ^ metadata accessed with helper macros
-*/
-typedef void*  array;
-
-#define ARRAY_HEADER_SIZE (sizeof(cl_mem) + sizeof(size_t)*3)
-#define ARRAY_BASE_PTR(arr) ((unsigned char *)(arr) - ARRAY_HEADER_SIZE)
-#define ARRAY_MEM(arr)    (*((cl_mem *)ARRAY_BASE_PTR(arr)))
-#define ARRAY_DIM3(arr)   (*(((size_t *) arr) - 3))
-#define ARRAY_DIM2(arr)   (*(((size_t *) arr) - 2))
-#define ARRAY_DIM1(arr)   (*(((size_t *) arr) - 1))
-#define ARRAY_SIZE(arr)   (ARRAY_DIM1(arr) * ARRAY_DIM2(arr) * ARRAY_DIM3(arr))
+typedef struct {
+    size_t dim1, dim2, dim3;
+    size_t membsize;
+    cl_mem device;
+    void *host;
+} array;
 
 /*
 ** Allocate host memory for array of given dimensions. Can return NULL on

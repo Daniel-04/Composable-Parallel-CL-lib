@@ -136,11 +136,11 @@ const char *_cl_err_to_str(cl_int err) {
     }
 }
 
-void _check_cl(cl_int err, const char *expr) {
+void _check_cl(cl_int err, const char *expr, int line, const char *file) {
     if (err != CL_SUCCESS) {
         fprintf(stderr,
                 "OpenCL error %d (%s) in \"%s\" at line %d in file %s\n", err,
-                _cl_err_to_str(err), expr, __LINE__, __FILE__);
+                _cl_err_to_str(err), expr, line, file);
         abort();
     }
 }
