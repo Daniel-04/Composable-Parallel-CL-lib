@@ -28,7 +28,7 @@ void setup_cl (cl_platform_id *platform, cl_device_id *device,
 #define _STR(x) #x
 #define _EXPAND(x) _STR (x)
 /*
-** Coverts contents into a string after expanding macros, does not break syntax
+** Converts contents into a string after expanding macros, does not break syntax
 ** highlight, eases writing OpenCL kernels in c source files.
 */
 #define RAW(...) _EXPAND (__VA_ARGS__)
