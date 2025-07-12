@@ -239,5 +239,5 @@ void
 free_array (array arr)
 {
   free (arr.host);
-  // TODO: free device mem, zero fields
+  CHECK_CL (clReleaseMemObject (arr.device));
 }
