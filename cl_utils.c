@@ -222,6 +222,20 @@ _alloc_array (size_t membsize, cl_mem_flags flags, size_t dim1, size_t dim2,
 }
 
 void
+sync_array_to_device (array arr, cl_event *event)
+{
+  CHECK_CL (clEnqueueWriteBuffer (_queue, arr.device, CL_TRUE, 0,
+                                  ARRAY_SIZE (arr), arr.host, 0, NULL, event));
+}
+
+void
+sync_array_from_device (array arr, cl_event *event)
+{
+  CHECK_CL (clEnqueueReadBuffer (_queue, arr.device, CL_TRUE, 0,
+                                 ARRAY_SIZE (arr), arr.host, 0, NULL, event));
+}
+
+void
 free_array (array arr)
 {
   free (arr.host);

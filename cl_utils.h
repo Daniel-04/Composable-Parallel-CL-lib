@@ -59,8 +59,6 @@ typedef struct
 */
 array _alloc_array (size_t membsize, cl_mem_flags flags, size_t dim1,
                     size_t dim2, size_t dim3);
-void free_array (array arr);
-
 #define _GET_ALLOC_ARRAY(_1, _2, _3, NAME, ...) NAME
 #define _ALLOC_ARRAY_ONE(membsize, flags, dim1)                               \
   _alloc_array (membsize, flags, dim1, 1, 1)
@@ -74,8 +72,30 @@ void free_array (array arr);
 
 #define ARRAY_SIZE(arr) (arr.dim1 * arr.dim2 * arr.dim3)
 
-// TODO: functions for sync host -> device, device -> host (opt profiling args)
+/*
+** Write data in host side buffer to device buffer, blocks until finished.
+*/
+void sync_array_to_device (array arr, cl_event *event);
+#define _GET_SYNC_ARRAY_TO_DEVICE(_1, _2, NAME, ...) NAME
+#define _SYNC_ARRAY_TO_DEVICE_ONE(arr) sync_array_to_device (arr, NULL)
+#define _SYNC_ARRAY_TO_DEVICE_TWO(arr, event) sync_array_to_device (arr, event)
+#define SYNC_ARRAY_TO_DEVICE(...)                                             \
+  _GET_SYNC_ARRAY_TO_DEVICE (__VA_ARGS__, _SYNC_ARRAY_TO_DEVICE_TWO,          \
+                             _SYNC_ARRAY_TO_DEVICE_ONE) (__VA_ARGS__)
 
+/*
+** Read data into host side buffer from device buffer, blocks until finished.
+*/
+void sync_array_from_device (array arr, cl_event *event);
+#define _GET_SYNC_ARRAY_FROM_DEVICE(_1, _2, NAME, ...) NAME
+#define _SYNC_ARRAY_FROM_DEVICE_ONE(arr) sync_array_from_device (arr, NULL)
+#define _SYNC_ARRAY_FROM_DEVICE_TWO(arr, event)                               \
+  sync_array_from_device (arr, event)
+#define SYNC_ARRAY_FROM_DEVICE(...)                                           \
+  _GET_SYNC_ARRAY_FROM_DEVICE (__VA_ARGS__, _SYNC_ARRAY_FROM_DEVICE_TWO,      \
+                               _SYNC_ARRAY_FROM_DEVICE_ONE) (__VA_ARGS__)
+
+void free_array (array arr);
 #define FREE_ARRAY(arr) free_array (arr)
 
 #endif // CL_UTILS_H_

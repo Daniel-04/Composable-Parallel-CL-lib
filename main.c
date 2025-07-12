@@ -21,15 +21,18 @@ main ()
   a1 = a2 = b1 = b2 = c1 = c2 = 4096;
 
   array A
-      = ALLOC_ARRAY (float, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, a1, a2);
+      = ALLOC_ARRAY (float, CL_MEM_READ_ONLY, a1, a2);
   array B
-      = ALLOC_ARRAY (float, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, b1, b2);
+      = ALLOC_ARRAY (float, CL_MEM_READ_ONLY, b1, b2);
   array C = ALLOC_ARRAY (float, CL_MEM_READ_WRITE, c1, c2);
 
   for (int i = 0; i < ARRAY_SIZE (A); i++)
     ((float *)A.host)[i] = (float)(i % 100) / 10.0f;
   for (int i = 0; i < ARRAY_SIZE (B); i++)
     ((float *)B.host)[i] = (float)(i % 100) / 10.0f;
+
+  SYNC_ARRAY_TO_DEVICE(A, &mem_a_write);
+  SYNC_ARRAY_TO_DEVICE(B, &mem_b_write);
 
   char *mmul_src = _get_inner_product ("float", "+", "*");
   printf ("%s\n", mmul_src);
@@ -61,9 +64,10 @@ main ()
   CHECK_CL (clEnqueueReadBuffer (queue, C.device, CL_TRUE, 0,
                                  sizeof (float) * ARRAY_SIZE (C), C.host, 0,
                                  NULL, &mem_c_read));
+  SYNC_ARRAY_FROM_DEVICE(C, &mem_c_read);
 
-  /* LOG_CL_EVENT_TIME(mem_a_write); */
-  /* LOG_CL_EVENT_TIME(mem_b_write); */
+  LOG_CL_EVENT_TIME(mem_a_write);
+  LOG_CL_EVENT_TIME(mem_b_write);
   LOG_CL_EVENT_TIME (kernel_event);
   LOG_CL_EVENT_TIME (mem_c_read);
 
