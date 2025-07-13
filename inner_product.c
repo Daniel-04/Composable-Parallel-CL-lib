@@ -34,9 +34,6 @@ const char *_inner_product_fmt = RAW (__kernel void entry (
   int local_row = get_local_id (1);
   int local_col = get_local_id (0);
 
-  int group_row = get_group_id (1);
-  int group_col = get_group_id (0);
-
   __local % s A_tile[% d][% d];
   __local % s B_tile[% d][% d];
 
