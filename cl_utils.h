@@ -23,13 +23,13 @@ void copy_cl_pipeline (cl_platform_id *platform, cl_device_id *device,
                        cl_context *context, cl_command_queue *queue);
 void setup_cl (cl_platform_id *platform, cl_device_id *device,
                cl_context *context, cl_command_queue *queue,
-               cl_queue_properties *properties);
+               const cl_queue_properties *properties);
 
 #define _STR(x) #x
 #define _EXPAND(x) _STR (x)
 /*
-** Converts contents into a string after expanding macros, does not break syntax
-** highlight, eases writing OpenCL kernels in c source files.
+** Converts contents into a string after expanding macros, does not break
+** syntax highlight, eases writing OpenCL kernels in c source files.
 */
 #define RAW(...) _EXPAND (__VA_ARGS__)
 

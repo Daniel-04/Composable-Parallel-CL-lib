@@ -15,7 +15,7 @@ copy_cl_pipeline (cl_platform_id *platform, cl_device_id *device,
 
 void
 setup_cl (cl_platform_id *platform, cl_device_id *device, cl_context *context,
-          cl_command_queue *queue, cl_queue_properties *properties)
+          cl_command_queue *queue, const cl_queue_properties *properties)
 {
   cl_int err;
   CHECK_CL (clGetPlatformIDs (1, platform, NULL));
