@@ -183,6 +183,29 @@ _check_cl (cl_int err, const char *expr, int line, const char *file)
 }
 
 void
+try_build_program (cl_program program, cl_device_id device)
+{
+  cl_int err;
+
+  err = clBuildProgram (program, 1, &device, NULL, NULL, NULL);
+  if (err != CL_SUCCESS)
+    {
+      size_t log_size;
+      clGetProgramBuildInfo (program, device, CL_PROGRAM_BUILD_LOG, 0, NULL,
+                             &log_size);
+
+      char *log = (char *)malloc (log_size);
+
+      clGetProgramBuildInfo (program, device, CL_PROGRAM_BUILD_LOG, log_size,
+                             log, NULL);
+
+      fprintf (stderr, "OpenCL Program Build Failed:\n%s\n", log);
+      free (log);
+      abort ();
+    }
+}
+
+void
 _log_cl_event_time (cl_event event, const char *expr)
 {
   cl_ulong _start, _end;

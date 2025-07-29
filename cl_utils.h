@@ -43,6 +43,15 @@ void _check_cl (cl_int err, const char *expr, int line, const char *file);
 #define CHECK_CL(...)                                                         \
   _GET_CHECK_CL (__VA_ARGS__, _CHECK_CL_TWO, _CHECK_CL_ONE) (__VA_ARGS__)
 
+void try_build_program (cl_program program, cl_device_id device);
+#define _GET_TRY_BUILD_PROGRAM(_1, _2, NAME, ...) NAME
+#define _TRY_BUILD_PROGRAM_ONE(program) try_build_program (program, _device)
+#define _TRY_BUILD_PROGRAM_two(program, device)                               \
+  try_build_program (program, device)
+#define TRY_BUILD_PROGRAM(...)                                                \
+  _GET_TRY_BUILD_PROGRAM (__VA_ARGS__, _TRY_BUILD_PROGRAM_TWO,                \
+                          _TRY_BUILD_PROGRAM_ONE) (__VA_ARGS__)
+
 void _log_cl_event_time (cl_event event, const char *expr);
 #define LOG_CL_EVENT_TIME(event) _log_cl_event_time ((event), #event)
 
