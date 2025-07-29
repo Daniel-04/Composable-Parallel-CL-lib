@@ -16,5 +16,5 @@ debug: $(SRCS)
 san: $(SRCS)
 	gcc -O3 $(LIBS) $(FLAGS) $(FSAN) -o $@ $^
 
-clean: main debug san
-	rm -f $^
+clean:
+	rm -f main debug san
