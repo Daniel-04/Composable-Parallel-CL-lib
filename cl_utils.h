@@ -33,24 +33,29 @@ void setup_cl (cl_platform_id *platform, cl_device_id *device,
 */
 #define RAW(...) _EXPAND (__VA_ARGS__)
 
+/*
+** For multi argument macros to choose N'th argument version
+*/
+#define _GETM_ONE(_1, NAME, ...) NAME
+#define _GETM_TWO(_1, _2, NAME, ...) NAME
+#define _GETM_THREE(_1, _2, _3, NAME, ...) NAME
+
 const char *_cl_err_to_str (cl_int err);
 void _check_cl (cl_int err, const char *expr, int line, const char *file);
-#define _GET_CHECK_CL(_1, _2, NAME, ...) NAME
 #define _CHECK_CL_ONE(expr) _check_cl ((expr), #expr, __LINE__, __FILE__)
 #define _CHECK_CL_TWO(expr, err)                                              \
   expr;                                                                       \
   _check_cl (err, #expr, __LINE__, __FILE__)
 #define CHECK_CL(...)                                                         \
-  _GET_CHECK_CL (__VA_ARGS__, _CHECK_CL_TWO, _CHECK_CL_ONE) (__VA_ARGS__)
+  _GETM_TWO (__VA_ARGS__, _CHECK_CL_TWO, _CHECK_CL_ONE) (__VA_ARGS__)
 
 void try_build_program (cl_program program, cl_device_id device);
-#define _GET_TRY_BUILD_PROGRAM(_1, _2, NAME, ...) NAME
 #define _TRY_BUILD_PROGRAM_ONE(program) try_build_program (program, _device)
 #define _TRY_BUILD_PROGRAM_two(program, device)                               \
   try_build_program (program, device)
 #define TRY_BUILD_PROGRAM(...)                                                \
-  _GET_TRY_BUILD_PROGRAM (__VA_ARGS__, _TRY_BUILD_PROGRAM_TWO,                \
-                          _TRY_BUILD_PROGRAM_ONE) (__VA_ARGS__)
+  _GETM_TWO (__VA_ARGS__, _TRY_BUILD_PROGRAM_TWO,                             \
+             _TRY_BUILD_PROGRAM_ONE) (__VA_ARGS__)
 
 void _log_cl_event_time (cl_event event, const char *expr);
 #define LOG_CL_EVENT_TIME(event) _log_cl_event_time ((event), #event)
@@ -68,7 +73,6 @@ typedef struct
 */
 array _alloc_array (size_t membsize, cl_mem_flags flags, size_t dim1,
                     size_t dim2, size_t dim3);
-#define _GET_ALLOC_ARRAY(_1, _2, _3, NAME, ...) NAME
 #define _ALLOC_ARRAY_ONE(membsize, flags, dim1)                               \
   _alloc_array (membsize, flags, dim1, 1, 1)
 #define _ALLOC_ARRAY_TWO(membsize, flags, dim1, dim2)                         \
@@ -76,8 +80,8 @@ array _alloc_array (size_t membsize, cl_mem_flags flags, size_t dim1,
 #define _ALLOC_ARRAY_THREE(membsize, flags, dim1, dim2, dim3)                 \
   _alloc_array (membsize, flags, dim1, dim2, dim3)
 #define ALLOC_ARRAY(type, flags, ...)                                         \
-  _GET_ALLOC_ARRAY (__VA_ARGS__, _ALLOC_ARRAY_THREE, _ALLOC_ARRAY_TWO,        \
-                    _ALLOC_ARRAY_ONE) (sizeof (type), flags, __VA_ARGS__)
+  _GETM_THREE (__VA_ARGS__, _ALLOC_ARRAY_THREE, _ALLOC_ARRAY_TWO,             \
+               _ALLOC_ARRAY_ONE) (sizeof (type), flags, __VA_ARGS__)
 
 #define ARRAY_SIZE(arr) (arr.dim1 * arr.dim2 * arr.dim3)
 
@@ -85,24 +89,22 @@ array _alloc_array (size_t membsize, cl_mem_flags flags, size_t dim1,
 ** Write data in host side buffer to device buffer, blocks until finished.
 */
 void sync_array_to_device (array arr, cl_event *event);
-#define _GET_SYNC_ARRAY_TO_DEVICE(_1, _2, NAME, ...) NAME
 #define _SYNC_ARRAY_TO_DEVICE_ONE(arr) sync_array_to_device (arr, NULL)
 #define _SYNC_ARRAY_TO_DEVICE_TWO(arr, event) sync_array_to_device (arr, event)
 #define SYNC_ARRAY_TO_DEVICE(...)                                             \
-  _GET_SYNC_ARRAY_TO_DEVICE (__VA_ARGS__, _SYNC_ARRAY_TO_DEVICE_TWO,          \
-                             _SYNC_ARRAY_TO_DEVICE_ONE) (__VA_ARGS__)
+  _GETM_TWO (__VA_ARGS__, _SYNC_ARRAY_TO_DEVICE_TWO,                          \
+             _SYNC_ARRAY_TO_DEVICE_ONE) (__VA_ARGS__)
 
 /*
 ** Read data into host side buffer from device buffer, blocks until finished.
 */
 void sync_array_from_device (array arr, cl_event *event);
-#define _GET_SYNC_ARRAY_FROM_DEVICE(_1, _2, NAME, ...) NAME
 #define _SYNC_ARRAY_FROM_DEVICE_ONE(arr) sync_array_from_device (arr, NULL)
 #define _SYNC_ARRAY_FROM_DEVICE_TWO(arr, event)                               \
   sync_array_from_device (arr, event)
 #define SYNC_ARRAY_FROM_DEVICE(...)                                           \
-  _GET_SYNC_ARRAY_FROM_DEVICE (__VA_ARGS__, _SYNC_ARRAY_FROM_DEVICE_TWO,      \
-                               _SYNC_ARRAY_FROM_DEVICE_ONE) (__VA_ARGS__)
+  _GETM_TWO (__VA_ARGS__, _SYNC_ARRAY_FROM_DEVICE_TWO,                        \
+             _SYNC_ARRAY_FROM_DEVICE_ONE) (__VA_ARGS__)
 
 void free_array (array arr);
 #define FREE_ARRAY(arr) free_array (arr)
