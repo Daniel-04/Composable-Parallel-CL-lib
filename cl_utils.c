@@ -3,6 +3,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+cl_platform_id _platform;
+cl_device_id _device;
+cl_context _context;
+cl_command_queue _queue;
+
 void
 copy_cl_pipeline (cl_platform_id *platform, cl_device_id *device,
                   cl_context *context, cl_command_queue *queue)

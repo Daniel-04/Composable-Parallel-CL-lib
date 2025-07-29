@@ -14,10 +14,10 @@
 /*
 ** Copies of user CL pipeline for library use.
 */
-static cl_platform_id _platform;
-static cl_device_id _device;
-static cl_context _context;
-static cl_command_queue _queue;
+extern cl_platform_id _platform;
+extern cl_device_id _device;
+extern cl_context _context;
+extern cl_command_queue _queue;
 
 void copy_cl_pipeline (cl_platform_id *platform, cl_device_id *device,
                        cl_context *context, cl_command_queue *queue);
