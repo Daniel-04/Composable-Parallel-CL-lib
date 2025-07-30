@@ -1,5 +1,6 @@
 #include "cl_utils.h"
 #include <CL/cl.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -203,6 +204,30 @@ try_build_program (cl_program program, cl_device_id device)
       free (log);
       abort ();
     }
+}
+
+void
+set_kernel_args (cl_kernel kernel, int num_args, ...)
+{
+  va_list args;
+  va_start (args, num_args);
+
+  int arg_index = 0;
+  for (int i = 0; i < num_args; i++)
+    {
+      array arr = va_arg (args, array);
+
+      CHECK_CL (
+          clSetKernelArg (kernel, arg_index++, sizeof (int), &(arr.dim1)));
+      CHECK_CL (
+          clSetKernelArg (kernel, arg_index++, sizeof (int), &(arr.dim2)));
+      CHECK_CL (
+          clSetKernelArg (kernel, arg_index++, sizeof (int), &(arr.dim3)));
+      CHECK_CL (clSetKernelArg (kernel, arg_index++, sizeof (cl_mem),
+                                &(arr.device)));
+    }
+
+  va_end (args);
 }
 
 void

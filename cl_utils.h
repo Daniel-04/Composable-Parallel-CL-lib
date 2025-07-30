@@ -57,12 +57,21 @@ void try_build_program (cl_program program, cl_device_id device);
   _GETM_TWO (__VA_ARGS__, _TRY_BUILD_PROGRAM_TWO,                             \
              _TRY_BUILD_PROGRAM_ONE) (__VA_ARGS__)
 
+void set_kernel_args (cl_kernel kernel, int num_args, ...);
+#define _SET_KERNEL_ARGS_ONE(kernel, A) set_kernel_args (kernel, 1, A)
+#define _SET_KERNEL_ARGS_TWO(kernel, A, B) set_kernel_args (kernel, 2, A, B)
+#define _SET_KERNEL_ARGS_THREE(kernel, A, B, C)                               \
+  set_kernel_args (kernel, 3, A, B, C)
+#define SET_KERNEL_ARGS(kernel, ...)                                          \
+  _GETM_THREE (__VA_ARGS__, _SET_KERNEL_ARGS_THREE, _SET_KERNEL_ARGS_TWO,     \
+               _SET_KERNEL_ARGS_ONE) (kernel, __VA_ARGS__)
+
 void _log_cl_event_time (cl_event event, const char *expr);
 #define LOG_CL_EVENT_TIME(event) _log_cl_event_time ((event), #event)
 
 typedef struct
 {
-  size_t dim1, dim2, dim3;
+  int dim1, dim2, dim3;
   size_t membsize;
   cl_mem device;
   void *host;
