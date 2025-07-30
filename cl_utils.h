@@ -4,12 +4,18 @@
 #ifndef CL_TARGET_OPENCL_VERSION
 #define CL_TARGET_OPENCL_VERSION 300
 #endif
-#ifndef DEFAULT_CL_DEVICE
-#define DEFAULT_CL_DEVICE CL_DEVICE_TYPE_GPU
-#endif
 #include <CL/cl.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+/*
+** Used by kernels.
+*/
+#ifndef TILE_SIZE
+#define TILE_SIZE 16
+#endif
+extern int _tile_size;
+void set_tile_size (int size);
 
 /*
 ** Copies of user CL pipeline for library use.
@@ -19,6 +25,9 @@ extern cl_device_id _device;
 extern cl_context _context;
 extern cl_command_queue _queue;
 
+#ifndef DEFAULT_CL_DEVICE
+#define DEFAULT_CL_DEVICE CL_DEVICE_TYPE_GPU
+#endif
 void copy_cl_pipeline (cl_platform_id *platform, cl_device_id *device,
                        cl_context *context, cl_command_queue *queue);
 void setup_cl (cl_platform_id *platform, cl_device_id *device,

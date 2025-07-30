@@ -4,6 +4,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+int _tile_size = TILE_SIZE;
+void
+set_tile_size (int size)
+{
+  if (size > 0)
+    {
+      _tile_size = size;
+    }
+}
+
 cl_platform_id _platform;
 cl_device_id _device;
 cl_context _context;
