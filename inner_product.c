@@ -1,7 +1,3 @@
-/*
-** TODO: isolate inner product code into standalone string,
-** extract function signature into wrapper
-*/
 #include "inner_product.h"
 #include <stdio.h>
 
@@ -25,9 +21,9 @@
 ** 17. OP2
 */
 const char *_inner_product_fmt = RAW (__kernel void entry (
-    const int a1, const int a2, __global const % s * A, const int b1,
-    const int b2, __global const % s * B, const int c1, const int c2,
-    __global % s * C) {
+    const int a1, const int a2, const int a3, __global const % s * A,
+    const int b1, const int b2, const int b3, __global const % s * B,
+    const int c1, const int c2, const int c3, __global % s * C) {
   int row = get_global_id (1);
   int col = get_global_id (0);
 
@@ -37,7 +33,7 @@ const char *_inner_product_fmt = RAW (__kernel void entry (
   __local % s A_tile[% d][% d];
   __local % s B_tile[% d][% d];
 
-  % s acc = 0.0f;
+  % s acc = 0;
 
   for (int t = 0; t < (a1 + % d - 1) / % d; t++)
     {
@@ -45,9 +41,9 @@ const char *_inner_product_fmt = RAW (__kernel void entry (
       int tiled_row_B = t * % d + local_row;
 
       A_tile[local_row][local_col]
-          = (row < a2 && tiled_col_A < a1) ? A[row * a1 + tiled_col_A] : 0.0f;
+          = (row < a2 && tiled_col_A < a1) ? A[row * a1 + tiled_col_A] : 0;
       B_tile[local_row][local_col]
-          = (tiled_row_B < b2 && col < b1) ? B[tiled_row_B * b1 + col] : 0.0f;
+          = (tiled_row_B < b2 && col < b1) ? B[tiled_row_B * b1 + col] : 0;
       barrier (CLK_LOCAL_MEM_FENCE);
 
       for (int k = 0; k < % d; ++k)
@@ -62,6 +58,47 @@ const char *_inner_product_fmt = RAW (__kernel void entry (
       C[row * c1 + col] = acc;
     }
 });
+
+/* const char *_inner_product_fmt = RAW (__kernel void entry ( */
+/*     const int a1, const int a2, const int a3, __global const % s * A, */
+/*     const int b1, const int b2, const int b3, __global const % s * B, */
+/*     const int c1, const int c2, const int c3, __global % s * C) { */
+/*   int row = get_global_id (1); */
+/*   int col = get_global_id (0); */
+
+/*   int local_row = get_local_id (1); */
+/*   int local_col = get_local_id (0); */
+
+/*   __local % s A_tile[% d][% d]; */
+/*   __local % s B_tile[% d][% d]; */
+
+/*   % s acc = 0; */
+
+/*   for (int t = 0; t < (a1 + % d - 1) / % d; t++) */
+/*     { */
+/*       int tiled_col_A = t * % d + local_col; */
+/*       int tiled_row_B = t * % d + local_row; */
+
+/*       A_tile[local_row][local_col] */
+/*           = (row < a2 && tiled_col_A < a1) ? A[row * a1 + tiled_col_A] : 0;
+ */
+/*       B_tile[local_row][local_col] */
+/*           = (tiled_row_B < b2 && col < b1) ? B[tiled_row_B * b1 + col] : 0;
+ */
+/*       barrier (CLK_LOCAL_MEM_FENCE); */
+
+/*       for (int k = 0; k < % d; ++k) */
+/*         { */
+/*           acc = acc % s (A_tile[local_row][k] % s B_tile[k][local_col]); */
+/*         } */
+/*       barrier (CLK_LOCAL_MEM_FENCE); */
+/*     } */
+
+/*   if (row < c2 && col < c1) */
+/*     { */
+/*       C[row * c1 + col] = acc; */
+/*     } */
+/* }); */
 
 char *
 _get_inner_product (const char *dtype, const char *op1, const char *op2)

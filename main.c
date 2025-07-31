@@ -1,12 +1,13 @@
 #include "cl_utils.h"
 #include "inner_product.h"
+#include "map.h"
+#include "outer_product.h"
 #include <CL/cl.h>
 #include <stdio.h>
 
 int
 main ()
 {
-  cl_event kernel_event, mem_a_write, mem_b_write, mem_c_read;
   cl_int err;
   cl_platform_id platform;
   cl_device_id device;
@@ -14,69 +15,63 @@ main ()
   cl_command_queue queue;
   const cl_queue_properties props[]
       = { CL_QUEUE_PROPERTIES, CL_QUEUE_PROFILING_ENABLE, 0 };
-
   setup_cl (&platform, &device, &context, &queue, props);
 
-  int a1, a2, b1, b2, c1, c2;
-  a1 = a2 = b1 = b2 = c1 = c2 = 4096;
+  int n = 4096;
+  int a1 = n;
+  int a2 = n;
+  int b1 = n;
+  int b2 = n;
 
-  array A = ALLOC_ARRAY (float, CL_MEM_READ_ONLY, a1, a2);
-  array B = ALLOC_ARRAY (float, CL_MEM_READ_ONLY, b1, b2);
-  array C = ALLOC_ARRAY (float, CL_MEM_READ_WRITE, c1, c2);
+  int c1 = n;
+  int c2 = n;
+  array A = ALLOC_ARRAY (int, CL_MEM_READ_ONLY, a1, a2);
+  array B = ALLOC_ARRAY (int, CL_MEM_READ_ONLY, b1, b2);
+  array C = ALLOC_ARRAY (int, CL_MEM_READ_WRITE, c1, c2);
 
-  for (int i = 0; i < ARRAY_SIZE (A); i++)
-    ((float *)A.host)[i] = (float)(i % 100) / 10.0f;
-  for (int i = 0; i < ARRAY_SIZE (B); i++)
-    ((float *)B.host)[i] = (float)(i % 100) / 10.0f;
+  int i = 0;
+  for (; i < ARRAY_SIZE ((A)); i++)
+    {
+      ((int *)A.host)[i] = i + 1;
+    }
 
-  SYNC_ARRAY_TO_DEVICE (A, &mem_a_write);
-  SYNC_ARRAY_TO_DEVICE (B, &mem_b_write);
+  for (int j = 0; j < ARRAY_SIZE ((B)); j++)
+    {
+      i++;
+      ((int *)B.host)[j] = i;
+    }
 
-  char *mmul_src = _get_inner_product ("float", "+", "*");
-  printf ("%s\n", mmul_src);
-  cl_program program
-      = CHECK_CL (clCreateProgramWithSource (
-                      context, 1, (const char **)&mmul_src, NULL, &err),
-                  err);
-  CHECK_CL (clBuildProgram (program, 1, &device, NULL, NULL, NULL));
+  SYNC_ARRAY_TO_DEVICE (A);
+  SYNC_ARRAY_TO_DEVICE (B);
 
+  char *src = _get_inner_product ("int", "+", "*");
+  printf ("%s\n", src);
+  cl_program program = CHECK_CL (
+      clCreateProgramWithSource (context, 1, (const char **)&src, NULL, &err),
+      err);
+  TRY_BUILD_PROGRAM (program);
   cl_kernel kern = CHECK_CL (clCreateKernel (program, "entry", &err), err);
+  SET_KERNEL_ARGS (kern, A, B, C);
 
-  CHECK_CL (clSetKernelArg (kern, 0, sizeof (int), &a1));
-  CHECK_CL (clSetKernelArg (kern, 1, sizeof (int), &a2));
-  CHECK_CL (clSetKernelArg (kern, 2, sizeof (cl_mem), &A.device));
-  CHECK_CL (clSetKernelArg (kern, 3, sizeof (int), &b1));
-  CHECK_CL (clSetKernelArg (kern, 4, sizeof (int), &b2));
-  CHECK_CL (clSetKernelArg (kern, 5, sizeof (cl_mem), &B.device));
-  CHECK_CL (clSetKernelArg (kern, 6, sizeof (int), &c1));
-  CHECK_CL (clSetKernelArg (kern, 7, sizeof (int), &c2));
-  CHECK_CL (clSetKernelArg (kern, 8, sizeof (cl_mem), &C.device));
+  cl_event kernel_time;
+  size_t local_size[] = { _tile_size, _tile_size };
+  size_t global_size[]
+      = { LOWEST_MULTIPLE_OF_TILE (C.dim1), LOWEST_MULTIPLE_OF_TILE (C.dim2) };
+  CHECK_CL (clEnqueueNDRangeKernel (
+      queue, kern, sizeof (global_size) / sizeof (*global_size), NULL,
+      global_size, local_size, 0, NULL, &kernel_time));
 
-  size_t local_size[2] = { TILE_SIZE, TILE_SIZE };
-  size_t global_size[2] = { ((c1 + TILE_SIZE - 1) / TILE_SIZE) * TILE_SIZE,
-                            ((c2 + TILE_SIZE - 1) / TILE_SIZE) * TILE_SIZE };
+  SYNC_ARRAY_FROM_DEVICE (C);
 
-  CHECK_CL (clEnqueueNDRangeKernel (queue, kern, 2, NULL, global_size,
-                                    local_size, 0, NULL, &kernel_event));
-
-  CHECK_CL (clEnqueueReadBuffer (queue, C.device, CL_TRUE, 0,
-                                 sizeof (float) * ARRAY_SIZE (C), C.host, 0,
-                                 NULL, &mem_c_read));
-  SYNC_ARRAY_FROM_DEVICE (C, &mem_c_read);
-
-  LOG_CL_EVENT_TIME (mem_a_write);
-  LOG_CL_EVENT_TIME (mem_b_write);
-  LOG_CL_EVENT_TIME (kernel_event);
-  LOG_CL_EVENT_TIME (mem_c_read);
+  LOG_CL_EVENT_TIME (kernel_time);
 
   free_array (A);
   free_array (B);
   free_array (C);
-
   CHECK_CL (clReleaseDevice (device));
   CHECK_CL (clReleaseContext (context));
   CHECK_CL (clReleaseCommandQueue (queue));
-  free (mmul_src);
+  free (src);
 
   return 0;
 }
