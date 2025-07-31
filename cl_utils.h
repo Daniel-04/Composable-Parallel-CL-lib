@@ -17,6 +17,9 @@
 extern int _tile_size;
 void set_tile_size (int size);
 
+#define LOWEST_MULTIPLE_OF_TILE(n)                                            \
+  ((((n) + _tile_size - 1) / _tile_size) * _tile_size)
+
 /*
 ** Copies of user CL pipeline for library use.
 */
