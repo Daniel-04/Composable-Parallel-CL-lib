@@ -287,7 +287,8 @@ _alloc_array (size_t membsize, cl_mem_flags flags, size_t dim1, size_t dim2,
 void
 sync_array_to_device (array arr, cl_event *event)
 {
-  CHECK_CL (clEnqueueWriteBuffer (_queue, arr.device, CL_TRUE, 0,
+  cl_bool blocking = (event == NULL);
+  CHECK_CL (clEnqueueWriteBuffer (_queue, arr.device, blocking, 0,
                                   arr.membsize * ARRAY_SIZE (arr), arr.host, 0,
                                   NULL, event));
 }
@@ -295,7 +296,8 @@ sync_array_to_device (array arr, cl_event *event)
 void
 sync_array_from_device (array arr, cl_event *event)
 {
-  CHECK_CL (clEnqueueReadBuffer (_queue, arr.device, CL_TRUE, 0,
+  cl_bool blocking = (event == NULL);
+  CHECK_CL (clEnqueueReadBuffer (_queue, arr.device, blocking, 0,
                                  arr.membsize * ARRAY_SIZE (arr), arr.host, 0,
                                  NULL, event));
 }
