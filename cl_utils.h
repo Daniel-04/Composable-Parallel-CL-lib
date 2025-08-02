@@ -81,28 +81,62 @@ void set_kernel_args (cl_kernel kernel, int num_args, ...);
 void _log_cl_event_time (cl_event event, const char *expr);
 #define LOG_CL_EVENT_TIME(event) _log_cl_event_time ((event), #event)
 
+#define _TYPE_LIST                                                            \
+  X (int, TYPE_INT)                                                           \
+  X (float, TYPE_FLOAT)                                                       \
+  X (double, TYPE_DOUBLE)
+
+typedef enum
+{
+  TYPE_UNKNOWN,
+#define X(type, enum_name) enum_name,
+  _TYPE_LIST
+#undef X
+} array_type;
+
+enum
+{
+#define X(type, enum_name) _TYPE_MAP_##type = enum_name,
+  _TYPE_LIST
+#undef X
+};
+#define TYPE_OF(type) _TYPE_MAP_##type
+
+#define X(type, enum_name) sizeof (type),
+static const size_t _size_of_type_map[] = { 0, _TYPE_LIST };
+#undef X
+#define SIZE_OF_TYPE(type) _size_of_type_map[type]
+
 typedef struct
 {
   int dim1, dim2, dim3;
   size_t membsize;
   cl_mem device;
-  void *host;
+  array_type type;
+  union
+  {
+    void *host;
+    int *ints;
+    float *floats;
+    double *doubles;
+  };
 } array;
 
 /*
 ** Allocate memory for array of given dimensions, on host and device.
 */
-array _alloc_array (size_t membsize, cl_mem_flags flags, size_t dim1,
+array _alloc_array (array_type type, cl_mem_flags flags, size_t dim1,
                     size_t dim2, size_t dim3);
-#define _ALLOC_ARRAY_ONE(membsize, flags, dim1)                               \
-  _alloc_array (membsize, flags, dim1, 1, 1)
-#define _ALLOC_ARRAY_TWO(membsize, flags, dim1, dim2)                         \
-  _alloc_array (membsize, flags, dim1, dim2, 1)
-#define _ALLOC_ARRAY_THREE(membsize, flags, dim1, dim2, dim3)                 \
-  _alloc_array (membsize, flags, dim1, dim2, dim3)
+#define _ALLOC_ARRAY_ONE(type, flags, dim1)                                   \
+  _alloc_array (type, flags, dim1, 1, 1)
+#define _ALLOC_ARRAY_TWO(type, flags, dim1, dim2)                             \
+  _alloc_array (type, flags, dim1, dim2, 1)
+#define _ALLOC_ARRAY_THREE(type, flags, dim1, dim2, dim3)                     \
+  _alloc_array (type, flags, dim1, dim2, dim3)
 #define ALLOC_ARRAY(type, flags, ...)                                         \
   _GETM_THREE (__VA_ARGS__, _ALLOC_ARRAY_THREE, _ALLOC_ARRAY_TWO,             \
-               _ALLOC_ARRAY_ONE) (sizeof (type), flags, __VA_ARGS__)
+               _ALLOC_ARRAY_ONE) ((array_type)TYPE_OF (type), flags,          \
+                                  __VA_ARGS__)
 
 #define ARRAY_SIZE(arr) (arr.dim1 * arr.dim2 * arr.dim3)
 

@@ -254,13 +254,14 @@ _log_cl_event_time (cl_event event, const char *expr)
 }
 
 array
-_alloc_array (size_t membsize, cl_mem_flags flags, size_t dim1, size_t dim2,
+_alloc_array (array_type type, cl_mem_flags flags, size_t dim1, size_t dim2,
               size_t dim3)
 {
   array arr;
-  size_t total_size = dim1 * dim2 * dim3;
+  size_t size = dim1 * dim2 * dim3;
+  size_t membsize = SIZE_OF_TYPE (type);
 
-  arr.host = malloc (total_size * membsize);
+  arr.host = malloc (size * membsize);
   if (!arr.host)
     {
       fprintf (stderr, "Memory allocation error\n");
@@ -271,6 +272,7 @@ _alloc_array (size_t membsize, cl_mem_flags flags, size_t dim1, size_t dim2,
   arr.dim2 = dim2;
   arr.dim3 = dim3;
   arr.membsize = membsize;
+  arr.type = type;
 
   void *host_ptr = NULL;
   if ((flags & CL_MEM_COPY_HOST_PTR) || (flags & CL_MEM_USE_HOST_PTR))
