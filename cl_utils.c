@@ -314,32 +314,30 @@ free_array (array arr)
 void
 print_array (array arr)
 {
-  const char *fmt;
-  switch (arr.type)
-    {
-    case TYPE_INT:
-      fmt = ", %d";
-      break;
-    case TYPE_FLOAT:
-      fmt = ", %f";
-      break;
-    case TYPE_DOUBLE:
-      fmt = ", %lf";
-      break;
-    default:
-      fprintf (stderr, "Unknown element type trying to print array\n");
-      abort ();
-    }
-
   for (int k = 0; k < arr.dim3; k++)
     {
       for (int j = 0; j < arr.dim2; j++)
         {
           for (int i = 0; i < arr.dim1; i++)
             {
-              printf (fmt, ((unsigned char *)
-                                arr.host)[(i + arr.dim1 * (j + arr.dim2 * k))
-                                          * arr.membsize]);
+              switch (arr.type)
+                {
+                case TYPE_INT:
+                  printf (", %d", arr.ints[i + arr.dim1 * (j + arr.dim2 * k)]);
+                  break;
+                case TYPE_FLOAT:
+                  printf (", %f",
+                          arr.floats[i + arr.dim1 * (j + arr.dim2 * k)]);
+                  break;
+                case TYPE_DOUBLE:
+                  printf (", %lf",
+                          arr.doubles[i + arr.dim1 * (j + arr.dim2 * k)]);
+                  break;
+                default:
+                  fprintf (stderr,
+                           "Unknown element type trying to print array\n");
+                  abort ();
+                }
             }
           printf (" ],\r[\n");
         }
