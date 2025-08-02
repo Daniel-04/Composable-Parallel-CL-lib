@@ -310,3 +310,39 @@ free_array (array arr)
   free (arr.host);
   CHECK_CL (clReleaseMemObject (arr.device));
 }
+
+void
+print_array (array arr)
+{
+  const char *fmt;
+  switch (arr.type)
+    {
+    case TYPE_INT:
+      fmt = ", %d";
+      break;
+    case TYPE_FLOAT:
+      fmt = ", %f";
+      break;
+    case TYPE_DOUBLE:
+      fmt = ", %lf";
+      break;
+    default:
+      fprintf (stderr, "Unknown element type trying to print array\n");
+      abort ();
+    }
+
+  for (int k = 0; k < arr.dim3; k++)
+    {
+      for (int j = 0; j < arr.dim2; j++)
+        {
+          for (int i = 0; i < arr.dim1; i++)
+            {
+              printf (fmt, ((unsigned char *)
+                                arr.host)[(i + arr.dim1 * (j + arr.dim2 * k))
+                                          * arr.membsize]);
+            }
+          printf (" ],\r[\n");
+        }
+      printf ("\n");
+    }
+}

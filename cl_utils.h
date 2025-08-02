@@ -164,4 +164,6 @@ void sync_array_from_device (array arr, cl_event *event);
 void free_array (array arr);
 #define FREE_ARRAY(arr) free_array (arr)
 
+void print_array (array arr);
+
 #endif // CL_UTILS_H_
