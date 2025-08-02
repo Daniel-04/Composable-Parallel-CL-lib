@@ -100,12 +100,12 @@ enum
   _TYPE_LIST
 #undef X
 };
-#define TYPE_OF(type) _TYPE_MAP_##type
+#define TYPE_TO_ENUM(type) _TYPE_MAP_##type
 
 #define X(type, enum_name) sizeof (type),
 static const size_t _size_of_type_map[] = { 0, _TYPE_LIST };
 #undef X
-#define SIZE_OF_TYPE(type) _size_of_type_map[type]
+#define SIZE_FROM_ENUM(type) _size_of_type_map[type]
 
 typedef struct
 {
@@ -135,7 +135,7 @@ array _alloc_array (array_type type, cl_mem_flags flags, size_t dim1,
   _alloc_array (type, flags, dim1, dim2, dim3)
 #define ALLOC_ARRAY(type, flags, ...)                                         \
   _GETM_THREE (__VA_ARGS__, _ALLOC_ARRAY_THREE, _ALLOC_ARRAY_TWO,             \
-               _ALLOC_ARRAY_ONE) ((array_type)TYPE_OF (type), flags,          \
+               _ALLOC_ARRAY_ONE) ((array_type)TYPE_TO_ENUM (type), flags,     \
                                   __VA_ARGS__)
 
 #define ARRAY_SIZE(arr) (arr.dim1 * arr.dim2 * arr.dim3)

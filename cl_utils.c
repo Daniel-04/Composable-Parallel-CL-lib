@@ -259,7 +259,7 @@ _alloc_array (array_type type, cl_mem_flags flags, size_t dim1, size_t dim2,
 {
   array arr;
   size_t size = dim1 * dim2 * dim3;
-  size_t membsize = SIZE_OF_TYPE (type);
+  size_t membsize = SIZE_FROM_ENUM (type);
 
   arr.host = malloc (size * membsize);
   if (!arr.host)
