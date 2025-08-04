@@ -2,6 +2,7 @@
 #include "inner_product.h"
 #include "map.h"
 #include "outer_product.h"
+#include "reduce.h"
 #include <CL/cl.h>
 #include <stdio.h>
 
@@ -17,12 +18,12 @@ main ()
       = { CL_QUEUE_PROPERTIES, CL_QUEUE_PROFILING_ENABLE, 0 };
   setup_cl (&platform, &device, &context, &queue, props);
 
-  int n = 4096;
+  /* int n = 1 << 22; */
+  int n = 3;
   int a1 = n;
   int a2 = n;
   int b1 = n;
   int b2 = n;
-
   int c1 = n;
   int c2 = n;
   array A = ALLOC_ARRAY (int, CL_MEM_READ_ONLY, a1, a2);
@@ -32,18 +33,21 @@ main ()
   int i = 0;
   for (; i < ARRAY_SIZE ((A)); i++)
     {
-      ((int *)A.host)[i] = i + 1;
+      A.ints[i] = i + 1;
     }
-
   for (int j = 0; j < ARRAY_SIZE ((B)); j++)
     {
+      B.ints[j] = i + 1;
       i++;
-      ((int *)B.host)[j] = i;
     }
+
+  print_array (A);
+  print_array (B);
 
   SYNC_ARRAY_TO_DEVICE (A);
   SYNC_ARRAY_TO_DEVICE (B);
 
+  // TODO: GET_MAP("int", "93 +", A, B);
   char *src = _get_inner_product ("int", "+", "*");
   printf ("%s\n", src);
   cl_program program = CHECK_CL (
@@ -60,10 +64,11 @@ main ()
   CHECK_CL (clEnqueueNDRangeKernel (
       queue, kern, sizeof (global_size) / sizeof (*global_size), NULL,
       global_size, local_size, 0, NULL, &kernel_time));
+  LOG_CL_EVENT_TIME (kernel_time);
 
   SYNC_ARRAY_FROM_DEVICE (C);
 
-  LOG_CL_EVENT_TIME (kernel_time);
+  print_array (C);
 
   free_array (A);
   free_array (B);
