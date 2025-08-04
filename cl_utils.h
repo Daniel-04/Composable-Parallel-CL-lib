@@ -161,6 +161,9 @@ void sync_array_from_device (array arr, cl_event *event);
   _GETM_TWO (__VA_ARGS__, _SYNC_ARRAY_FROM_DEVICE_TWO,                        \
              _SYNC_ARRAY_FROM_DEVICE_ONE) (__VA_ARGS__)
 
+array clone_array (array arr, cl_mem_flags flags);
+#define CLONE_ARRAY(arr, flags) clone_array (arr, flags)
+
 void free_array (array arr);
 #define FREE_ARRAY(arr) free_array (arr)
 

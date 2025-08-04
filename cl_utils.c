@@ -278,10 +278,10 @@ _alloc_array (array_type type, cl_mem_flags flags, size_t dim1, size_t dim2,
   if ((flags & CL_MEM_COPY_HOST_PTR) || (flags & CL_MEM_USE_HOST_PTR))
     host_ptr = arr.host;
   cl_int err;
-  arr.device = CHECK_CL (clCreateBuffer (_context, flags,
-                                         membsize * dim1 * dim2 * dim3,
-                                         host_ptr, &err),
-                         err);
+  arr.device
+      = CHECK_CL (clCreateBuffer (_context, flags, membsize * ARRAY_SIZE (arr),
+                                  host_ptr, &err),
+                  err);
 
   return arr;
 }
@@ -302,6 +302,43 @@ sync_array_from_device (array arr, cl_event *event)
   CHECK_CL (clEnqueueReadBuffer (_queue, arr.device, blocking, 0,
                                  arr.membsize * ARRAY_SIZE (arr), arr.host, 0,
                                  NULL, event));
+}
+
+array
+clone_array (array arr, cl_mem_flags flags)
+{
+  array clone;
+
+  clone.host = malloc (ARRAY_SIZE (arr) * arr.membsize);
+  if (!clone.host)
+    {
+      fprintf (stderr, "Memory allocation error\n");
+      abort ();
+    }
+
+  clone.dim1 = arr.dim1;
+  clone.dim2 = arr.dim2;
+  clone.dim3 = arr.dim3;
+  clone.membsize = arr.membsize;
+  arr.type = arr.type;
+
+  void *host_ptr = NULL;
+  if ((flags & CL_MEM_COPY_HOST_PTR) || (flags & CL_MEM_USE_HOST_PTR))
+    host_ptr = clone.host;
+  cl_int err;
+  clone.device = CHECK_CL (clCreateBuffer (_context, flags,
+                                           clone.membsize * ARRAY_SIZE (clone),
+                                           host_ptr, &err),
+                           err);
+
+  cl_event copy_event;
+  CHECK_CL (clEnqueueCopyBuffer (_queue, arr.device, clone.device, 0, 0,
+                                 clone.membsize * ARRAY_SIZE (clone), 0, NULL,
+                                 &copy_event));
+
+  clWaitForEvents (1, &copy_event);
+
+  return clone;
 }
 
 void
