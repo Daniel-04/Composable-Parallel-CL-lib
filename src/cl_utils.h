@@ -105,7 +105,14 @@ enum
 #define X(type, enum_name) sizeof (type),
 static const size_t _size_of_type_map[] = { 0, _TYPE_LIST };
 #undef X
-#define SIZE_FROM_ENUM(type) _size_of_type_map[type]
+#define SIZE_FROM_ENUM(enum) _size_of_type_map[enum]
+
+// I hope this is slightly more sane/easier to debug than setting unknown type
+// to an empty string?
+/* #define X(type, enum_name) #type, */
+/* static const char *_str_of_type_map[] = { "void", _TYPE_LIST }; */
+/* #undef X */
+/* #define TYPE_STR_FROM_ENUM(enum) _str_of_type_map[enum] */
 
 typedef struct
 {
