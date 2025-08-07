@@ -3,6 +3,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 int _tile_size = TILE_SIZE;
 void
@@ -315,6 +316,7 @@ clone_array (array arr, cl_mem_flags flags)
       fprintf (stderr, "Memory allocation error\n");
       abort ();
     }
+  memcpy (clone.host, arr.host, ARRAY_SIZE (arr) * arr.membsize);
 
   clone.dim1 = arr.dim1;
   clone.dim2 = arr.dim2;
