@@ -64,4 +64,7 @@ debug release static shared: all
 %: %.c all
 	$(CC) $(CFLAGS) $(INC_FLAGS) $< -o $@ $(LDLIBS)
 
+docs:
+	doxygen Doxyfile
+
 .PHONY: all clean debug release static shared

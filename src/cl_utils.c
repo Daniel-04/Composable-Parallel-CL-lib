@@ -255,8 +255,8 @@ _log_cl_event_time (cl_event event, const char *expr)
 }
 
 array
-_alloc_array (array_type type, cl_mem_flags flags, size_t dim1, size_t dim2,
-              size_t dim3)
+alloc_array (array_type type, cl_mem_flags flags, size_t dim1, size_t dim2,
+             size_t dim3)
 {
   array arr;
   size_t size = dim1 * dim2 * dim3;
