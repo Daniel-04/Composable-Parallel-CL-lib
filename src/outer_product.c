@@ -1,4 +1,5 @@
 #include "outer_product.h"
+#include "cl_utils.h"
 #include <stdio.h>
 
 /* Format strings:
@@ -28,8 +29,7 @@ _get_outer_product (const char *dtype, const char *op1)
 
   if (count == -1)
     {
-      fprintf (stderr, "Failed to print to kernel string\n");
-      abort ();
+      handle_error ("Failed to print to kernel string");
     }
 
   return kernel;

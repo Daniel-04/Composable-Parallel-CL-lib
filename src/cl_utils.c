@@ -5,6 +5,33 @@
 #include <stdlib.h>
 #include <string.h>
 
+void
+abort_handler (const char *err, ...)
+{
+  va_list args;
+  va_start (args, err);
+
+  vfprintf (stderr, err, args);
+  fprintf (stderr, "\n");
+
+  va_end (args);
+  abort ();
+}
+
+static error_handler_fn default_handler = abort_handler;
+
+void
+set_error_handler (error_handler_fn handler)
+{
+  default_handler = handler;
+}
+
+void
+handle_error (const char *err, ...)
+{
+  default_handler (err);
+}
+
 int _tile_size = TILE_SIZE;
 void
 set_tile_size (int size)
@@ -187,10 +214,8 @@ _check_cl (cl_int err, const char *expr, int line, const char *file)
 {
   if (err != CL_SUCCESS)
     {
-      fprintf (stderr,
-               "OpenCL error %d (%s) in \"%s\" at line %d in file %s\n", err,
-               _cl_err_to_str (err), expr, line, file);
-      abort ();
+      handle_error ("OpenCL error %d (%s) in \"%s\" at line %d in file %s",
+                    err, _cl_err_to_str (err), expr, line, file);
     }
 }
 
@@ -211,9 +236,8 @@ try_build_program (cl_program program, cl_device_id device)
       clGetProgramBuildInfo (program, device, CL_PROGRAM_BUILD_LOG, log_size,
                              log, NULL);
 
-      fprintf (stderr, "OpenCL Program Build Failed:\n%s\n", log);
+      handle_error ("OpenCL program build failed:\n%s", log);
       free (log);
-      abort ();
     }
 }
 
@@ -265,8 +289,7 @@ alloc_array (array_type type, cl_mem_flags flags, size_t dim1, size_t dim2,
   arr.host = malloc (size * membsize);
   if (!arr.host)
     {
-      fprintf (stderr, "Memory allocation error\n");
-      abort ();
+      handle_error ("Memory allocation error");
     }
 
   arr.dim1 = dim1;
@@ -313,8 +336,7 @@ clone_array (array arr, cl_mem_flags flags)
   clone.host = malloc (ARRAY_SIZE (arr) * arr.membsize);
   if (!clone.host)
     {
-      fprintf (stderr, "Memory allocation error\n");
-      abort ();
+      handle_error ("Memory allocation error\n");
     }
   memcpy (clone.host, arr.host, ARRAY_SIZE (arr) * arr.membsize);
 
@@ -373,9 +395,7 @@ print_array (array arr)
                           arr.doubles[i + arr.dim1 * (j + arr.dim2 * k)]);
                   break;
                 default:
-                  fprintf (stderr,
-                           "Unknown element type trying to print array\n");
-                  abort ();
+                  handle_error ("Unknown element type trying to print array");
                 }
             }
           printf (" ],\r[\n");

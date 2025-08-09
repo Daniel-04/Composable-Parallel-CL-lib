@@ -100,8 +100,7 @@ _get_transpose (const char *dtype)
 
   if (count == -1)
     {
-      fprintf (stderr, "Failed to print to kernel string\n");
-      abort ();
+      handle_error ("Failed to print to kernel string");
     }
 
   return kernel;

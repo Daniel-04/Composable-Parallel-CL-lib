@@ -14,6 +14,31 @@
 #include <stdlib.h>
 
 /**
+ * @brief Library error handler signature.
+ */
+typedef void (*error_handler_fn) (const char *err, ...);
+
+/**
+ * @brief Sets the error handler used by the library.
+ *
+ * This function sets the error handler function by the library.
+ *
+ * @param handler The @ref error_handler_fn "error handler function" to set.
+ */
+void set_error_handler (error_handler_fn handler);
+
+/**
+ * @brief Error handler used by the library.
+ *
+ * By default this error handler prints an error message and aborts the
+ * program, generating a coredump. @ref set_error_handler "Error handler" can
+ * be set by the user.
+ *
+ * @param err Error message to output.
+ */
+void handle_error (const char *err, ...);
+
+/**
  * @brief Default tile size used by the library, can be overriden.
  */
 #ifndef TILE_SIZE
