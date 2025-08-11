@@ -49,7 +49,7 @@ main ()
   cl_event kernel_time;
   size_t local_size[] = { _tile_size, _tile_size };
   size_t global_size[]
-      = { LOWEST_MULTIPLE_OF_TILE (A.dim1), LOWEST_MULTIPLE_OF_TILE (A.dim2) };
+      = { LOWEST_MULTIPLE_OF_TILE (C.dim1), LOWEST_MULTIPLE_OF_TILE (C.dim2) };
   CHECK_CL (clEnqueueNDRangeKernel (
       queue, kern, sizeof (global_size) / sizeof (*global_size), NULL,
       global_size, local_size, 0, NULL, &kernel_time));
