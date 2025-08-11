@@ -1,4 +1,6 @@
 #include "inner_product.h"
+#include "cl_utils.h"
+#include <CL/cl.h>
 #include <stdio.h>
 
 /* Format strings:
@@ -64,6 +66,28 @@ _get_inner_product (const char *dtype, const char *op1, const char *op2)
     {
       handle_error ("Failed to print to kernel string");
     }
+
+  return kernel;
+}
+
+cl_kernel
+inner_product (const char *op1, const char *op2, array A, array B, array C)
+{
+  cl_kernel kernel = NULL;
+
+  cl_int err;
+  const char *dtype = TYPE_STR_FROM_ENUM (C.type);
+  char *src = _get_inner_product (dtype, op1, op2);
+  cl_program program = CHECK_CL (
+      clCreateProgramWithSource (_context, 1, (const char **)&src, NULL, &err),
+      err);
+  TRY_BUILD_PROGRAM (program);
+  free (src);
+
+  kernel = CHECK_CL (clCreateKernel (program, "entry", &err), err);
+  clReleaseProgram (program);
+
+  SET_KERNEL_ARGS (kernel, A, B, C);
 
   return kernel;
 }

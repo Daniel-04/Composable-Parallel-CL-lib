@@ -34,3 +34,25 @@ _get_outer_product (const char *dtype, const char *op1)
 
   return kernel;
 }
+
+cl_kernel
+outer_product (const char *op1, array A, array B, array C)
+{
+  cl_kernel kernel = NULL;
+
+  cl_int err;
+  const char *dtype = TYPE_STR_FROM_ENUM (C.type);
+  char *src = _get_outer_product (dtype, op1);
+  cl_program program = CHECK_CL (
+      clCreateProgramWithSource (_context, 1, (const char **)&src, NULL, &err),
+      err);
+  TRY_BUILD_PROGRAM (program);
+  free (src);
+
+  kernel = CHECK_CL (clCreateKernel (program, "entry", &err), err);
+  clReleaseProgram (program);
+
+  SET_KERNEL_ARGS (kernel, A, B, C);
+
+  return kernel;
+}

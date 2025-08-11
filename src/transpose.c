@@ -105,3 +105,25 @@ _get_transpose (const char *dtype)
 
   return kernel;
 }
+
+cl_kernel
+transpose (array A, array B)
+{
+  cl_kernel kernel = NULL;
+
+  cl_int err;
+  const char *dtype = TYPE_STR_FROM_ENUM (B.type);
+  char *src = _get_transpose (dtype);
+  cl_program program = CHECK_CL (
+      clCreateProgramWithSource (_context, 1, (const char **)&src, NULL, &err),
+      err);
+  TRY_BUILD_PROGRAM (program);
+  free (src);
+
+  kernel = CHECK_CL (clCreateKernel (program, "entry", &err), err);
+  clReleaseProgram (program);
+
+  SET_KERNEL_ARGS (kernel, A, B);
+
+  return kernel;
+}
