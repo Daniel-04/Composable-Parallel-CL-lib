@@ -1,5 +1,6 @@
 #include "outer_product.h"
 #include "cl_utils.h"
+#include <CL/cl.h>
 #include <stdio.h>
 
 /* Format strings:
@@ -35,11 +36,9 @@ _get_outer_product (const char *dtype, const char *op1)
   return kernel;
 }
 
-cl_kernel
-outer_product (const char *op1, array A, array B, array C)
+void
+outer_product (const char *op1, array A, array B, array C, cl_event *event)
 {
-  cl_kernel kernel = NULL;
-
   cl_int err;
   const char *dtype = TYPE_STR_FROM_ENUM (C.type);
   char *src = _get_outer_product (dtype, op1);
@@ -49,10 +48,15 @@ outer_product (const char *op1, array A, array B, array C)
   TRY_BUILD_PROGRAM (program);
   free (src);
 
-  kernel = CHECK_CL (clCreateKernel (program, "entry", &err), err);
+  cl_kernel kernel = CHECK_CL (clCreateKernel (program, "entry", &err), err);
   clReleaseProgram (program);
 
   SET_KERNEL_ARGS (kernel, A, B, C);
 
-  return kernel;
+  size_t local_size[] = { _tile_size, _tile_size, _tile_size };
+  size_t global_size[]
+      = { LOWEST_MULTIPLE_OF_TILE (C.dim1), LOWEST_MULTIPLE_OF_TILE (C.dim2),
+          LOWEST_MULTIPLE_OF_TILE (C.dim3) };
+  CHECK_CL (clEnqueueNDRangeKernel (_queue, kernel, ARRAY_NUM_DIMS (C), NULL,
+                                    global_size, local_size, 0, NULL, event));
 }

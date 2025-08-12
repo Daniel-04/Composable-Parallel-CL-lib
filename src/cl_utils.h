@@ -119,6 +119,9 @@ void setup_cl (cl_platform_id *platform, cl_device_id *device,
 #define _GETM_ONE(_1, NAME, ...) NAME
 #define _GETM_TWO(_1, _2, NAME, ...) NAME
 #define _GETM_THREE(_1, _2, _3, NAME, ...) NAME
+#define _GETM_FOUR(_1, _2, _3, _4, NAME, ...) NAME
+#define _GETM_FIVE(_1, _2, _3, _4, _5, NAME, ...) NAME
+#define _GETM_SIX(_1, _2, _3, _4, _5, _6, NAME, ...) NAME
 
 const char *_cl_err_to_str (cl_int err);
 void _check_cl (cl_int err, const char *expr, int line, const char *file);
@@ -285,6 +288,11 @@ array alloc_array (array_type type, cl_mem_flags flags, size_t dim1,
  * @brief The size of an @ref array.
  */
 #define ARRAY_SIZE(arr) (arr.dim1 * arr.dim2 * arr.dim3)
+
+/**
+ * @brief Number of dimensions greater than 1 of an @ref array.
+ */
+#define ARRAY_NUM_DIMS(arr) ((arr.dim1 > 1) + (arr.dim2 > 1) + (arr.dim3 > 1))
 
 /**
  * @brief Synchronizes device-side buffer of an @ref array.
