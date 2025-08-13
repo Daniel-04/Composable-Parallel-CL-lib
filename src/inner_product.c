@@ -55,7 +55,7 @@ const char *_inner_product_fmt = RAW (__kernel void entry (
 });
 
 char *
-_get_inner_product (const char *dtype, const char *op1, const char *op2)
+get_inner_product (const char *dtype, const char *op1, const char *op2)
 {
   char *kernel = NULL;
 
@@ -76,7 +76,7 @@ inner_product (const char *op1, const char *op2, array A, array B, array C,
 {
   cl_int err;
   const char *dtype = TYPE_STR_FROM_ENUM (C.type);
-  char *src = _get_inner_product (dtype, op1, op2);
+  char *src = get_inner_product (dtype, op1, op2);
   cl_program program = CHECK_CL (
       clCreateProgramWithSource (_context, 1, (const char **)&src, NULL, &err),
       err);

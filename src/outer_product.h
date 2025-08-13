@@ -4,7 +4,7 @@
 #include "cl_utils.h"
 
 extern const char *_outer_product_fmt;
-char *_get_outer_product (const char *dtype, const char *op1);
+char *get_outer_product (const char *dtype, const char *op1);
 void outer_product (const char *op1, array A, array B, array C,
                     cl_event *event);
 #define _OUTER_PRODUCT_ONE(op1, A, B, C) outer_product (op1, A, B, C, NULL);

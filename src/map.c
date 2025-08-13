@@ -19,7 +19,7 @@ const char *_map_fmt = RAW (__kernel void entry (
 });
 
 char *
-_get_map (const char *dtype, const char *op1)
+get_map (const char *dtype, const char *op1)
 {
   char *kernel = NULL;
 
@@ -37,7 +37,7 @@ map (const char *op1, array A, array B, cl_event *event)
 {
   cl_int err;
   const char *dtype = TYPE_STR_FROM_ENUM (B.type);
-  char *src = _get_map (dtype, op1);
+  char *src = get_map (dtype, op1);
   cl_program program = CHECK_CL (
       clCreateProgramWithSource (_context, 1, (const char **)&src, NULL, &err),
       err);

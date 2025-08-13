@@ -4,7 +4,7 @@
 #include "cl_utils.h"
 
 extern const char *_map_fmt;
-char *_get_map (const char *dtype, const char *op1);
+char *get_map (const char *dtype, const char *op1);
 void map (const char *op1, array A, array B, cl_event *event);
 #define _MAP_ONE(op1, A, B) map (op1, A, B, NULL);
 #define _MAP_TWO(op1, A, B, event) map (op1, A, B, event)

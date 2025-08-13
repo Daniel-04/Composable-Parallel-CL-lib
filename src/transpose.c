@@ -91,7 +91,7 @@ const char *_transpose_fmt = RAW (__kernel void entry (
 /* }); */
 
 char *
-_get_transpose (const char *dtype)
+get_transpose (const char *dtype)
 {
   char *kernel = NULL;
 
@@ -111,7 +111,7 @@ transpose (array A, array B, cl_event *event)
 {
   cl_int err;
   const char *dtype = TYPE_STR_FROM_ENUM (B.type);
-  char *src = _get_transpose (dtype);
+  char *src = get_transpose (dtype);
   cl_program program = CHECK_CL (
       clCreateProgramWithSource (_context, 1, (const char **)&src, NULL, &err),
       err);

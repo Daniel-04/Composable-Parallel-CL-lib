@@ -22,7 +22,7 @@ const char *_outer_product_fmt = RAW (__kernel void entry (
 });
 
 char *
-_get_outer_product (const char *dtype, const char *op1)
+get_outer_product (const char *dtype, const char *op1)
 {
   char *kernel = NULL;
 
@@ -41,7 +41,7 @@ outer_product (const char *op1, array A, array B, array C, cl_event *event)
 {
   cl_int err;
   const char *dtype = TYPE_STR_FROM_ENUM (C.type);
-  char *src = _get_outer_product (dtype, op1);
+  char *src = get_outer_product (dtype, op1);
   cl_program program = CHECK_CL (
       clCreateProgramWithSource (_context, 1, (const char **)&src, NULL, &err),
       err);
