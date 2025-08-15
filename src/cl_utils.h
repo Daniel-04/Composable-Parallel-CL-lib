@@ -243,8 +243,9 @@ cl_kernel try_compile_kernel (const char *src, const char *kernel_name,
  * @param kernel OpenCL kernel to set arguments for.
  * @param num_args Number of arguments.
  * @param ... List of @ref array "arrays" to set as arguments.
+ * @return The number of arguments set to the kernel.
  */
-void set_kernel_args (cl_kernel kernel, int num_args, ...);
+int set_kernel_args (cl_kernel kernel, int num_args, ...);
 #define _SET_KERNEL_ARGS_ONE(kernel, A) set_kernel_args (kernel, 1, A)
 #define _SET_KERNEL_ARGS_TWO(kernel, A, B) set_kernel_args (kernel, 2, A, B)
 #define _SET_KERNEL_ARGS_THREE(kernel, A, B, C)                               \

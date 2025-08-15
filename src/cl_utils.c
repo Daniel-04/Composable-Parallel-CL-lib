@@ -522,7 +522,7 @@ try_compile_kernel (const char *src, const char *kernel_name,
   return kernel;
 }
 
-void
+int
 set_kernel_args (cl_kernel kernel, int num_args, ...)
 {
   va_list args;
@@ -544,6 +544,7 @@ set_kernel_args (cl_kernel kernel, int num_args, ...)
     }
 
   va_end (args);
+  return arg_index;
 }
 
 unsigned long long int
