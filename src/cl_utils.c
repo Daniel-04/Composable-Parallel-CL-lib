@@ -210,10 +210,216 @@ _cl_err_to_str (cl_int err)
 }
 
 void
+log_devices ()
+{
+  cl_int err;
+
+  cl_uint num_platforms = 0;
+  clGetPlatformIDs (0, NULL, &num_platforms);
+  printf ("Found %u platform(s)", num_platforms);
+  if (num_platforms > BUFSIZE)
+    {
+      printf (" will only query %d platforms", BUFSIZE);
+      num_platforms = BUFSIZE;
+    }
+  printf ("\n");
+
+  cl_platform_id platforms[BUFSIZE];
+  clGetPlatformIDs (num_platforms, platforms, NULL);
+
+  for (cl_uint i = 0; i < num_platforms; ++i)
+    {
+      char platform_name[BUFSIZE];
+      clGetPlatformInfo (platforms[i], CL_PLATFORM_NAME,
+                         sizeof (platform_name), platform_name, NULL);
+      printf ("\nPlatform %u: %s\n", i, platform_name);
+
+      cl_uint num_devices = 0;
+      err = clGetDeviceIDs (platforms[i], CL_DEVICE_TYPE_ALL, 0, NULL,
+                            &num_devices);
+      if (err == CL_DEVICE_NOT_FOUND || num_devices == 0)
+        {
+          printf ("  No devices found on this platform.\n");
+          continue;
+        }
+      else if (err != CL_SUCCESS)
+        {
+          printf ("  Error getting device IDs. Error code: %d (%s)\n", err,
+                  _cl_err_to_str (err));
+          continue;
+        }
+      else if (num_devices > BUFSIZE)
+        {
+          printf ("  Found %d devices will only query %d\n", num_devices,
+                  BUFSIZE);
+          num_devices = BUFSIZE;
+        }
+
+      cl_device_id devices[BUFSIZE];
+      clGetDeviceIDs (platforms[i], CL_DEVICE_TYPE_ALL, num_devices, devices,
+                      NULL);
+
+      for (cl_uint j = 0; j < num_devices; ++j)
+        {
+          char device_name[BUFSIZE], vendor[BUFSIZE], version[BUFSIZE],
+              driver_version[BUFSIZE];
+          cl_device_type device_type;
+          cl_bool compiler_available, device_available;
+
+          clGetDeviceInfo (devices[j], CL_DEVICE_NAME, sizeof (device_name),
+                           device_name, NULL);
+          clGetDeviceInfo (devices[j], CL_DEVICE_VENDOR, sizeof (vendor),
+                           vendor, NULL);
+          clGetDeviceInfo (devices[j], CL_DEVICE_VERSION, sizeof (version),
+                           version, NULL);
+          clGetDeviceInfo (devices[j], CL_DRIVER_VERSION,
+                           sizeof (driver_version), driver_version, NULL);
+          clGetDeviceInfo (devices[j], CL_DEVICE_TYPE, sizeof (device_type),
+                           &device_type, NULL);
+          clGetDeviceInfo (devices[j], CL_DEVICE_AVAILABLE,
+                           sizeof (device_available), &device_available, NULL);
+          clGetDeviceInfo (devices[j], CL_DEVICE_COMPILER_AVAILABLE,
+                           sizeof (compiler_available), &compiler_available,
+                           NULL);
+
+          const char *device_type_str;
+          switch (device_type)
+            {
+            case CL_DEVICE_TYPE_CPU:
+              device_type_str = "CPU";
+              break;
+            case CL_DEVICE_TYPE_GPU:
+              device_type_str = "GPU";
+              break;
+            case CL_DEVICE_TYPE_ACCELERATOR:
+              device_type_str = "Accelerator";
+              break;
+            case CL_DEVICE_TYPE_DEFAULT:
+              device_type_str = "Default";
+              break;
+            default:
+              device_type_str = "Unknown";
+              break;
+            }
+
+          printf ("  Device %u:\n", j);
+          printf ("    Name               : %s\n", device_name);
+          printf ("    Type               : %s\n", device_type_str);
+          printf ("    Vendor             : %s\n", vendor);
+          printf ("    Version            : %s\n", version);
+          printf ("    Driver Version     : %s\n", driver_version);
+          printf ("    Device Available   : %s\n",
+                  device_available ? "Yes" : "No");
+          printf ("    Compiler Available : %s\n",
+                  compiler_available ? "Yes" : "No");
+
+          cl_context context
+              = clCreateContext (NULL, 1, &devices[j], NULL, NULL, &err);
+          if (err == CL_INVALID_DEVICE)
+            {
+              printf ("    Context Status     : Device is INVALID for context "
+                      "creation\n");
+            }
+          else if (err == CL_SUCCESS)
+            {
+              printf (
+                  "    Context Status     : Context created successfully\n");
+              clReleaseContext (context);
+            }
+          else
+            {
+              printf ("    Context Status     : Error %d (%s) during context "
+                      "creation\n",
+                      err, _cl_err_to_str (err));
+            }
+        }
+    }
+}
+
+void
+log_memory_limits (cl_device_id device)
+{
+  if (device == NULL)
+    {
+      device = _device;
+    }
+  cl_ulong global_mem_size = 0;
+  cl_ulong max_alloc_size = 0;
+  cl_ulong local_mem_size = 0;
+  cl_ulong const_mem_size = 0;
+
+  clGetDeviceInfo (device, CL_DEVICE_GLOBAL_MEM_SIZE, sizeof (global_mem_size),
+                   &global_mem_size, NULL);
+  clGetDeviceInfo (device, CL_DEVICE_MAX_MEM_ALLOC_SIZE,
+                   sizeof (max_alloc_size), &max_alloc_size, NULL);
+  clGetDeviceInfo (device, CL_DEVICE_LOCAL_MEM_SIZE, sizeof (local_mem_size),
+                   &local_mem_size, NULL);
+  clGetDeviceInfo (device, CL_DEVICE_MAX_CONSTANT_BUFFER_SIZE,
+                   sizeof (const_mem_size), &const_mem_size, NULL);
+
+  printf ("Global Memory Size   : %lu bytes (%lu MB)\n", global_mem_size,
+          global_mem_size / (1024 * 1024));
+  printf ("Max Memory Alloc Size: %lu bytes (%lu MB)\n", max_alloc_size,
+          max_alloc_size / (1024 * 1024));
+  printf ("Local Memory Size    : %lu bytes (%lu KB)\n", local_mem_size,
+          local_mem_size / 1024);
+  printf ("Constant Buffer Size : %lu bytes (%lu KB)\n", const_mem_size,
+          const_mem_size / 1024);
+}
+
+void
+log_work_limits (cl_device_id device)
+{
+  if (device == NULL)
+    {
+      device = _device;
+    }
+  cl_uint max_dims = 0;
+  size_t max_work_item_sizes[3] = { 0 };
+  size_t max_work_group_size = 0;
+  clGetDeviceInfo (device, CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS,
+                   sizeof (max_dims), &max_dims, NULL);
+  clGetDeviceInfo (device, CL_DEVICE_MAX_WORK_ITEM_SIZES,
+                   sizeof (max_work_item_sizes), max_work_item_sizes, NULL);
+  clGetDeviceInfo (device, CL_DEVICE_MAX_WORK_GROUP_SIZE,
+                   sizeof (max_work_group_size), &max_work_group_size, NULL);
+
+  printf ("Max Work Group Size    : %zu\n", max_work_group_size);
+  printf ("Max Work Item Dims     : %u\n", max_dims);
+  printf ("Max Work Item Sizes    : { %zu, %zu, %zu }\n",
+          max_work_item_sizes[0], max_work_item_sizes[1],
+          max_work_item_sizes[2]);
+}
+
+void
 _check_cl (cl_int err, const char *expr, int line, const char *file)
 {
   if (err != CL_SUCCESS)
     {
+      switch (err)
+        {
+        case CL_DEVICE_NOT_FOUND:
+        case CL_DEVICE_NOT_AVAILABLE:
+        case CL_COMPILER_NOT_AVAILABLE:
+        case CL_INVALID_PLATFORM:
+        case CL_INVALID_DEVICE_TYPE:
+        case CL_INVALID_DEVICE:
+        case CL_INVALID_CONTEXT:
+          log_devices ();
+          break;
+        case CL_MEM_OBJECT_ALLOCATION_FAILURE:
+        case CL_OUT_OF_RESOURCES:
+        case CL_INVALID_BUFFER_SIZE:
+          log_memory_limits (_device);
+          break;
+        case CL_INVALID_GLOBAL_WORK_SIZE:
+        case CL_INVALID_WORK_GROUP_SIZE:
+        case CL_INVALID_WORK_DIMENSION:
+        case CL_INVALID_WORK_ITEM_SIZE:
+          log_work_limits (_device);
+          break;
+        }
+
       handle_error ("OpenCL error %d (%s) in \"%s\" at line %d in file %s",
                     err, _cl_err_to_str (err), expr, line, file);
     }

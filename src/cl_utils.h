@@ -13,6 +13,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#ifndef BUFSIZE
+#define BUFSIZE 256
+#endif
+
 /**
  * @brief Library error handler signature.
  */
@@ -122,6 +126,36 @@ void setup_cl (cl_platform_id *platform, cl_device_id *device,
 #define _GETM_FOUR(_1, _2, _3, _4, NAME, ...) NAME
 #define _GETM_FIVE(_1, _2, _3, _4, _5, NAME, ...) NAME
 #define _GETM_SIX(_1, _2, _3, _4, _5, _6, NAME, ...) NAME
+
+/**
+ * @brief Log information of devices.
+ */
+void log_devices ();
+#define LOG_DEVICES() log_devices ()
+
+/**
+ * @brief Log device memory limit information.
+ *
+ * @param device The cl_device to log for.
+ */
+void log_memory_limits (cl_device_id device);
+#define _LOG_MEMORY_LIMITS_ZERO(...) log_memory_limits (_device)
+#define _LOG_MEMORY_LIMITS_ONE(device) log_memory_limits (device)
+#define LOG_MEMORY_LIMITS(...)                                                \
+  _GETM_ONE (__VA_ARGS__, _LOG_MEMORY_LIMITS_ONE,                             \
+             _LOG_MEMORY_LIMITS_ZERO) (__VA_ARGS__)
+
+/**
+ * @brief Log device work limit information.
+ *
+ * @param device The cl_device to log for.
+ */
+void log_work_limits (cl_device_id device);
+#define _LOG_WORK_LIMITS_ZERO(...) log_memory_limits (_device)
+#define _LOG_MEMORY_LIMITS_ONE(device) log_memory_limits (device)
+#define LOG_MEMORY_LIMITS(...)                                                \
+  _GETM_ONE (__VA_ARGS__, _LOG_MEMORY_LIMITS_ONE,                             \
+             _LOG_MEMORY_LIMITS_ZERO) (__VA_ARGS__)
 
 const char *_cl_err_to_str (cl_int err);
 void _check_cl (cl_int err, const char *expr, int line, const char *file);
