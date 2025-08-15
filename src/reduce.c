@@ -48,15 +48,22 @@ const char *_reduce_1step_fmt = RAW (__kernel void entry (
 char *
 get_reduce_1step (const char *dtype, const char *op1)
 {
-  char *kernel = NULL;
+  int size
+      = snprintf (NULL, 0, _reduce_1step_fmt, dtype, _tile_size, dtype, op1);
 
-  int count
-      = asprintf (&kernel, _reduce_1step_fmt, dtype, _tile_size, dtype, op1);
+  char *kernel = malloc (size + 1);
+  if (!kernel)
+    {
+      handle_error ("Failed to allocate memory for kernel string");
+    }
 
+  int count = snprintf (kernel, size + 1, _reduce_1step_fmt, dtype, _tile_size,
+                        dtype, op1);
   if (count == -1)
     {
       handle_error ("Failed to print to kernel string");
     }
+
   return kernel;
 }
 

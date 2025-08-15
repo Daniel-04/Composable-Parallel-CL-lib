@@ -1,6 +1,5 @@
 #include "inner_product.h"
 #include "cl_utils.h"
-#include <CL/cl.h>
 #include <stdio.h>
 
 /* Format strings:
@@ -57,11 +56,17 @@ const char *_inner_product_fmt = RAW (__kernel void entry (
 char *
 get_inner_product (const char *dtype, const char *op1, const char *op2)
 {
-  char *kernel = NULL;
+  int size = snprintf (NULL, 0, _inner_product_fmt, dtype, dtype, dtype,
+                       _tile_size, dtype, dtype, dtype, op1, op2);
 
-  int count = asprintf (&kernel, _inner_product_fmt, dtype, dtype, dtype,
-                        _tile_size, dtype, dtype, dtype, op1, op2);
+  char *kernel = malloc (size + 1);
+  if (!kernel)
+    {
+      handle_error ("Failed to allocate memory for kernel string");
+    }
 
+  int count = snprintf (kernel, size + 1, _inner_product_fmt, dtype, dtype,
+                        dtype, _tile_size, dtype, dtype, dtype, op1, op2);
   if (count == -1)
     {
       handle_error ("Failed to print to kernel string");

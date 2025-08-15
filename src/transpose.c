@@ -1,4 +1,5 @@
 #include "transpose.h"
+#include "cl_utils.h"
 #include <stdio.h>
 
 /* Format strings:
@@ -93,11 +94,17 @@ const char *_transpose_fmt = RAW (__kernel void entry (
 char *
 get_transpose (const char *dtype)
 {
-  char *kernel = NULL;
+  int size
+      = snprintf (NULL, 0, _transpose_fmt, dtype, dtype, _tile_size, dtype);
 
-  int count
-      = asprintf (&kernel, _transpose_fmt, dtype, dtype, _tile_size, dtype);
+  char *kernel = malloc (size + 1);
+  if (!kernel)
+    {
+      handle_error ("Failed to allocate memory for kernel string");
+    }
 
+  int count = snprintf (kernel, size + 1, _transpose_fmt, dtype, dtype,
+                        _tile_size, dtype);
   if (count == -1)
     {
       handle_error ("Failed to print to kernel string");
