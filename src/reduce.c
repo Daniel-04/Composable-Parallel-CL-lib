@@ -82,17 +82,24 @@ reduce (const char *op1, array A, cl_event *event)
       = { LOWEST_MULTIPLE_OF_TILE (A.dim1), LOWEST_MULTIPLE_OF_TILE (A.dim2),
           LOWEST_MULTIPLE_OF_TILE (A.dim3) };
 
-  for (; global_size[0] > _tile_size;
+  cl_event
+      partials[BUFSIZE]; // Input > _tile_size^256 is exceedingly unlikely.
+  int event_count = 0;
+  for (; global_size[0] > (size_t)_tile_size;
        global_size[0] = (global_size[0] + _tile_size - 1) / _tile_size)
     {
       CHECK_CL (clEnqueueNDRangeKernel (_queue, kernel, ARRAY_NUM_DIMS (A),
                                         NULL, global_size, local_size, 0, NULL,
-                                        event));
+                                        &partials[event_count++]));
     }
   if (global_size[0] > 1)
     {
       CHECK_CL (clEnqueueNDRangeKernel (_queue, kernel, ARRAY_NUM_DIMS (A),
                                         NULL, global_size, NULL, 0, NULL,
-                                        event));
+                                        &partials[event_count++]));
     }
+
+  // FIXME: does not aggregate timing info
+  CHECK_CL (
+      clEnqueueMarkerWithWaitList (_queue, event_count, partials, event));
 }
