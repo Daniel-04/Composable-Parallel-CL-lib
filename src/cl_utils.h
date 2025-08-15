@@ -10,6 +10,7 @@
 #define CL_TARGET_OPENCL_VERSION 300
 #endif
 #include <CL/cl.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -235,36 +236,83 @@ void _log_cl_event_time (cl_event event, const char *expr);
 #define LOG_CL_EVENT_TIME(event) _log_cl_event_time ((event), #event)
 
 #define _TYPE_LIST                                                            \
-  X (int, TYPE_INT)                                                           \
-  X (float, TYPE_FLOAT)                                                       \
-  X (double, TYPE_DOUBLE)
+  X (void, TYPE_UNKNOWN, host)                                                \
+  X (float, TYPE_FLOAT, floats)                                               \
+  X (double, TYPE_DOUBLE, doubles)                                            \
+  X (char, TYPE_CHAR, chars)                                                  \
+  X (short, TYPE_SHORT, shorts)                                               \
+  X (int, TYPE_INT, ints)                                                     \
+  X (long, TYPE_LONG, longs)                                                  \
+  X (bool, TYPE_BOOL, bools)
+
+// TODO: either use or remove
+#define _VECTOR_TYPE_LIST                                                     \
+  X (char2, TYPE_CHAR2, char2s)                                               \
+  X (char4, TYPE_CHAR4, char4s)                                               \
+  X (char8, TYPE_CHAR8, char8s)                                               \
+  X (char16, TYPE_CHAR16, char16s)                                            \
+  X (uchar2, TYPE_UCHAR2, uchar2s)                                            \
+  X (uchar4, TYPE_UCHAR4, uchar4s)                                            \
+  X (uchar8, TYPE_UCHAR8, uchar8s)                                            \
+  X (uchar16, TYPE_UCHAR16, uchar16s)                                         \
+  X (short2, TYPE_SHORT2, short2s)                                            \
+  X (short4, TYPE_SHORT4, short4s)                                            \
+  X (short8, TYPE_SHORT8, short8s)                                            \
+  X (short16, TYPE_SHORT16, short16s)                                         \
+  X (ushort2, TYPE_USHORT2, ushort2s)                                         \
+  X (ushort4, TYPE_USHORT4, ushort4s)                                         \
+  X (ushort8, TYPE_USHORT8, ushort8s)                                         \
+  X (ushort16, TYPE_USHORT16, ushort16s)                                      \
+  X (int2, TYPE_INT2, int2s)                                                  \
+  X (int4, TYPE_INT4, int4s)                                                  \
+  X (int8, TYPE_INT8, int8s)                                                  \
+  X (int16, TYPE_INT16, int16s)                                               \
+  X (uint2, TYPE_UINT2, uint2s)                                               \
+  X (uint4, TYPE_UINT4, uint4s)                                               \
+  X (uint8, TYPE_UINT8, uint8s)                                               \
+  X (uint16, TYPE_UINT16, uint16s)                                            \
+  X (long2, TYPE_LONG2, long2s)                                               \
+  X (long4, TYPE_LONG4, long4s)                                               \
+  X (long8, TYPE_LONG8, long8s)                                               \
+  X (long16, TYPE_LONG16, long16s)                                            \
+  X (ulong2, TYPE_ULONG2, ulong2s)                                            \
+  X (ulong4, TYPE_ULONG4, ulong4s)                                            \
+  X (ulong8, TYPE_ULONG8, ulong8s)                                            \
+  X (ulong16, TYPE_ULONG16, ulong16s)                                         \
+  X (float2, TYPE_FLOAT2, float2s)                                            \
+  X (float4, TYPE_FLOAT4, float4s)                                            \
+  X (float8, TYPE_FLOAT8, float8s)                                            \
+  X (float16, TYPE_FLOAT16, float16s)                                         \
+  X (double2, TYPE_DOUBLE2, double2s)                                         \
+  X (double4, TYPE_DOUBLE4, double4s)                                         \
+  X (double8, TYPE_DOUBLE8, double8s)                                         \
+  X (double16, TYPE_DOUBLE16, double16s)
 
 /**
  * @brief Enum representing @ref array element types.
  */
 typedef enum
 {
-  TYPE_UNKNOWN,
-#define X(type, enum_name) enum_name,
+#define X(_, enum_name, __) enum_name,
   _TYPE_LIST
 #undef X
 } array_type;
 
 enum
 {
-#define X(type, enum_name) _TYPE_MAP_##type = enum_name,
+#define X(type, enum_name, _) _TYPE_MAP_##type = enum_name,
   _TYPE_LIST
 #undef X
 };
 #define TYPE_TO_ENUM(type) _TYPE_MAP_##type
 
-#define X(type, enum_name) sizeof (type),
-static const size_t _size_of_type_map[] = { 0, _TYPE_LIST };
+#define X(type, _, __) sizeof (type),
+static const size_t _size_of_type_map[] = { _TYPE_LIST };
 #undef X
 #define SIZE_FROM_ENUM(enum) _size_of_type_map[enum]
 
-#define X(type, enum_name) #type,
-static const char *_str_of_type_map[] = { "void", _TYPE_LIST };
+#define X(type, _, __) #type,
+static const char *_str_of_type_map[] = { _TYPE_LIST };
 #undef X
 #define TYPE_STR_FROM_ENUM(enum) _str_of_type_map[enum]
 
@@ -285,10 +333,9 @@ typedef struct
   array_type type;
   union
   {
-    void *host;
-    int *ints;
-    float *floats;
-    double *doubles;
+#define X(type, _, name) type *name;
+    _TYPE_LIST
+#undef X
   };
 } array;
 
