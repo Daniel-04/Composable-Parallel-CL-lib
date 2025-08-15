@@ -19,6 +19,16 @@
 #define BUFSIZE 256
 #endif
 
+/*
+** For multi argument macros to choose N'th argument version
+*/
+#define _GETM_ONE(_1, NAME, ...) NAME
+#define _GETM_TWO(_1, _2, NAME, ...) NAME
+#define _GETM_THREE(_1, _2, _3, NAME, ...) NAME
+#define _GETM_FOUR(_1, _2, _3, _4, NAME, ...) NAME
+#define _GETM_FIVE(_1, _2, _3, _4, _5, NAME, ...) NAME
+#define _GETM_SIX(_1, _2, _3, _4, _5, _6, NAME, ...) NAME
+
 /**
  * @brief Library error handler signature.
  */
@@ -185,18 +195,29 @@ void _check_cl (cl_int err, const char *expr, int line, const char *file);
   _GETM_TWO (__VA_ARGS__, _CHECK_CL_TWO, _CHECK_CL_ONE) (__VA_ARGS__)
 
 /**
- * @brief Attempt to build cl_program and log errors.
+ * @brief Attempt to compile an OpenCL kernel and log errors.
  *
- * @param program cl_program to build.
- * @param device cl_device_id of device to build program for.
+ * @param src kernel to compile.
+ * @param kernel_name name of kernel.
+ * @param context cl_context to build program for.
+ * @param device cl_device_id of device to compile for.
  */
-void try_build_program (cl_program program, cl_device_id device);
-#define _TRY_BUILD_PROGRAM_ONE(program) try_build_program (program, _device)
-#define _TRY_BUILD_PROGRAM_TWO(program, device)                               \
-  try_build_program (program, device)
-#define TRY_BUILD_PROGRAM(...)                                                \
-  _GETM_TWO (__VA_ARGS__, _TRY_BUILD_PROGRAM_TWO,                             \
-             _TRY_BUILD_PROGRAM_ONE) (__VA_ARGS__)
+cl_kernel try_compile_kernel (const char *src, const char *kernel_name,
+                              cl_context context, cl_device_id device);
+
+#define _TRY_COMPILE_KERNEL_FOUR(src, kernel, context, device)                \
+  try_compile_kernel (src, kernel, context, device)
+#define _TRY_COMPILE_KERNEL_THREE(src, kernel, context, ...)                  \
+  try_compile_kernel (src, kernel, context, _device)
+#define _TRY_COMPILE_KERNEL_TWO(src, kernel, ...)                             \
+  try_compile_kernel (src, kernel, _context, _device)
+#define _TRY_COMPILE_KERNEL_ONE(src)                                          \
+  try_compile_kernel (src, "entry", _context, _device)
+#define TRY_COMPILE_KERNEL(...)                                               \
+  _GETM_FOUR (__VA_ARGS__, _TRY_COMPILE_KERNEL_FOUR,                          \
+              _TRY_COMPILE_KERNEL_THREE, _TRY_COMPILE_KERNEL_TWO,             \
+              _TRY_COMPILE_KERNEL_ONE) (                                      \
+      __VA_ARGS__) /**< @copydoc try_compile_kernel */
 
 /**
  * @brief Set @ref array "arrays" as arguments to an OpenCL kernel.

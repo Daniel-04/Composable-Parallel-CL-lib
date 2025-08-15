@@ -109,18 +109,10 @@ get_transpose (const char *dtype)
 void
 transpose (array A, array B, cl_event *event)
 {
-  cl_int err;
   const char *dtype = TYPE_STR_FROM_ENUM (B.type);
   char *src = get_transpose (dtype);
-  cl_program program = CHECK_CL (
-      clCreateProgramWithSource (_context, 1, (const char **)&src, NULL, &err),
-      err);
-  TRY_BUILD_PROGRAM (program);
+  cl_kernel kernel = TRY_COMPILE_KERNEL (src);
   free (src);
-
-  cl_kernel kernel = CHECK_CL (clCreateKernel (program, "entry", &err), err);
-  clReleaseProgram (program);
-
   SET_KERNEL_ARGS (kernel, A, B);
 
   size_t local_size[] = { _tile_size, _tile_size, _tile_size };

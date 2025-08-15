@@ -74,18 +74,10 @@ void
 inner_product (const char *op1, const char *op2, array A, array B, array C,
                cl_event *event)
 {
-  cl_int err;
   const char *dtype = TYPE_STR_FROM_ENUM (C.type);
   char *src = get_inner_product (dtype, op1, op2);
-  cl_program program = CHECK_CL (
-      clCreateProgramWithSource (_context, 1, (const char **)&src, NULL, &err),
-      err);
-  TRY_BUILD_PROGRAM (program);
+  cl_kernel kernel = TRY_COMPILE_KERNEL (src);
   free (src);
-
-  cl_kernel kernel = CHECK_CL (clCreateKernel (program, "entry", &err), err);
-  clReleaseProgram (program);
-
   SET_KERNEL_ARGS (kernel, A, B, C);
 
   size_t local_size[] = { _tile_size, _tile_size, _tile_size };

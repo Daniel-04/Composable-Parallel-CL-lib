@@ -63,18 +63,10 @@ get_reduce_1step (const char *dtype, const char *op1)
 void
 reduce (const char *op1, array A, cl_event *event)
 {
-  cl_int err;
   const char *dtype = TYPE_STR_FROM_ENUM (A.type);
   char *src = get_reduce_1step (dtype, op1);
-  cl_program program = CHECK_CL (
-      clCreateProgramWithSource (_context, 1, (const char **)&src, NULL, &err),
-      err);
-  TRY_BUILD_PROGRAM (program);
+  cl_kernel kernel = TRY_COMPILE_KERNEL (src);
   free (src);
-
-  cl_kernel kernel = CHECK_CL (clCreateKernel (program, "entry", &err), err);
-  clReleaseProgram (program);
-
   SET_KERNEL_ARGS (kernel, A);
 
   size_t local_size[] = { _tile_size, _tile_size, _tile_size };
