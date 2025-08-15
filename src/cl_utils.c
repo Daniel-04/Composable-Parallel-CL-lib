@@ -72,6 +72,62 @@ setup_cl (cl_platform_id *platform, cl_device_id *device, cl_context *context,
   copy_cl_pipeline (platform, device, context, queue); // For library use
 }
 
+char *
+read_cl_file (const char *filename)
+{
+  FILE *file = fopen (filename, "rb");
+  if (!file)
+    {
+      handle_error ("Failed to open file '%s'", filename);
+      return NULL;
+    }
+
+  fseek (file, 0, SEEK_END);
+  long size = ftell (file);
+  rewind (file);
+
+  if (size < 0)
+    {
+      fclose (file);
+      handle_error ("Failed to determine size of file '%s'", filename);
+      return NULL;
+    }
+
+  char *source = (char *)malloc (size + 1);
+  if (!source)
+    {
+      fclose (file);
+      handle_error ("Failed to allocate memory for file '%s'", filename);
+      return NULL;
+    }
+
+  size_t read_size = fread (source, 1, size, file);
+  fclose (file);
+  source[read_size] = '\0';
+
+  return source;
+}
+
+void
+write_cl_file (const char *filename, const char *source)
+{
+  FILE *file = fopen (filename, "w");
+  if (!file)
+    {
+      handle_error ("Failed to open file '%s' for writing", filename);
+      return;
+    }
+
+  if (fputs (source, file) == EOF)
+    {
+      fclose (file);
+      handle_error ("Failed to write to file '%s'", filename);
+      return;
+    }
+
+  fclose (file);
+}
+
 const char *
 _cl_err_to_str (cl_int err)
 {
@@ -424,10 +480,15 @@ _check_cl (cl_int err, const char *expr, int line, const char *file)
     }
 }
 
-void
-try_build_program (cl_program program, cl_device_id device)
+cl_kernel
+try_compile_kernel (const char *src, const char *kernel_name,
+                    cl_context context, cl_device_id device)
 {
-  cl_int err = clBuildProgram (program, 1, &device, NULL, NULL, NULL);
+  cl_int err;
+  cl_program program = CHECK_CL (
+      clCreateProgramWithSource (context, 1, (const char **)&src, NULL, &err),
+      err);
+  err = clBuildProgram (program, 1, &device, NULL, NULL, NULL);
   if (err != CL_SUCCESS)
     {
       cl_build_status status;
@@ -452,6 +513,13 @@ try_build_program (cl_program program, cl_device_id device)
                     log_size, log);
       free (log);
     }
+
+  cl_kernel kernel
+      = CHECK_CL (clCreateKernel (program, kernel_name, &err), err);
+
+  CHECK_CL (clReleaseProgram (program));
+
+  return kernel;
 }
 
 void
@@ -478,16 +546,22 @@ set_kernel_args (cl_kernel kernel, int num_args, ...)
   va_end (args);
 }
 
+unsigned long long int
+get_cl_event_time (cl_event event)
+{
+  cl_ulong start, end;
+  CHECK_CL (clWaitForEvents (1, &event));
+  CHECK_CL (clGetEventProfilingInfo (event, CL_PROFILING_COMMAND_START,
+                                     sizeof (cl_ulong), &start, NULL));
+  CHECK_CL (clGetEventProfilingInfo (event, CL_PROFILING_COMMAND_END,
+                                     sizeof (cl_ulong), &end, NULL));
+  return end - start;
+}
+
 void
 _log_cl_event_time (cl_event event, const char *expr)
 {
-  cl_ulong _start, _end;
-  CHECK_CL (clWaitForEvents (1, &event));
-  CHECK_CL (clGetEventProfilingInfo (event, CL_PROFILING_COMMAND_START,
-                                     sizeof (cl_ulong), &_start, NULL));
-  CHECK_CL (clGetEventProfilingInfo (event, CL_PROFILING_COMMAND_END,
-                                     sizeof (cl_ulong), &_end, NULL));
-  printf ("EVENT: %s took %f ms\n", expr, (_end - _start) * 1e-6);
+  printf ("EVENT: %s took %f ms\n", expr, get_cl_event_time (event) * 1e-6);
   CHECK_CL (clReleaseEvent (event));
 }
 

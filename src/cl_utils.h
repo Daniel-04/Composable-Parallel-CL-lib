@@ -129,20 +129,35 @@ void setup_cl (cl_platform_id *platform, cl_device_id *device,
  */
 #define RAW(...) _EXPAND (__VA_ARGS__)
 
-/*
-** For multi argument macros to choose N'th argument version
-*/
-#define _GETM_ONE(_1, NAME, ...) NAME
-#define _GETM_TWO(_1, _2, NAME, ...) NAME
-#define _GETM_THREE(_1, _2, _3, NAME, ...) NAME
-#define _GETM_FOUR(_1, _2, _3, _4, NAME, ...) NAME
-#define _GETM_FIVE(_1, _2, _3, _4, _5, NAME, ...) NAME
-#define _GETM_SIX(_1, _2, _3, _4, _5, _6, NAME, ...) NAME
+/**
+ * @brief Reads the contents of an OpenCL source file.
+ *
+ * Opens the specified file in binary mode, reads its entire contents into a
+ * newly allocated buffer, and returns a null-terminated string containing the
+ * file contents.
+ *
+ * The caller is responsible for freeing the returned buffer.
+ *
+ * @param filename Path to the `.cl` file to read.
+ * @return Pointer to null-terminated string, or NULL on failure.
+ */
+char *read_cl_file (const char *filename);
 
 /**
- * @brief Log information of devices.
+ * @brief Writes null-terminated OpenCL source string into a file.
+ *
+ * Opens the file at the specified path in write mode and writes the given
+ * source string into it. Overwrites any existing file with the same name.
+ *
+ * @param filename Path to the file to write.
+ * @param source Null-terminated string to write.
  */
-void log_devices ();
+void write_cl_file (const char *filename, const char *source);
+
+/**
+ * @brief Log information of available devices.
+ */
+void log_devices (void);
 #define LOG_DEVICES() log_devices ()
 
 /**
@@ -246,6 +261,17 @@ void set_kernel_args (cl_kernel kernel, int num_args, ...);
 #define SET_KERNEL_ARGS(kernel, ...)                                          \
   _GETM_THREE (__VA_ARGS__, _SET_KERNEL_ARGS_THREE, _SET_KERNEL_ARGS_TWO,     \
                _SET_KERNEL_ARGS_ONE) (kernel, __VA_ARGS__)
+
+/**
+ * @brief Get the time taken by a cl_event in nanoseconds.
+ *
+ * Requires that cl_command_queue be created with profiling enabled.
+ *
+ * @param event The cl_event to measure.
+ */
+unsigned long long get_cl_event_time (cl_event event);
+#define GET_CL_EVENT_TIME(event)                                              \
+  get_cl_event_time (event) /**< @copydoc get_cl_event_time */
 
 void _log_cl_event_time (cl_event event, const char *expr);
 /**
