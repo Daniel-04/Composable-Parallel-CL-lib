@@ -6,15 +6,11 @@
 #include <string.h>
 
 void
-abort_handler (const char *err, ...)
+abort_handler (const char *err, va_list args)
 {
-  va_list args;
-  va_start (args, err);
-
   vfprintf (stderr, err, args);
   fprintf (stderr, "\n");
 
-  va_end (args);
   abort ();
 }
 
@@ -29,7 +25,10 @@ set_error_handler (error_handler_fn handler)
 void
 handle_error (const char *err, ...)
 {
-  default_handler (err);
+  va_list args;
+  va_start (args, err);
+  default_handler (err, args);
+  va_end (args);
 }
 
 int _tile_size = TILE_SIZE;
@@ -428,21 +427,29 @@ _check_cl (cl_int err, const char *expr, int line, const char *file)
 void
 try_build_program (cl_program program, cl_device_id device)
 {
-  cl_int err;
-
-  err = clBuildProgram (program, 1, &device, NULL, NULL, NULL);
+  cl_int err = clBuildProgram (program, 1, &device, NULL, NULL, NULL);
   if (err != CL_SUCCESS)
     {
-      size_t log_size;
-      clGetProgramBuildInfo (program, device, CL_PROGRAM_BUILD_LOG, 0, NULL,
-                             &log_size);
+      cl_build_status status;
+      CHECK_CL (clGetProgramBuildInfo (program, device,
+                                       CL_PROGRAM_BUILD_STATUS,
+                                       sizeof (status), &status, NULL));
+      printf ("Build status: %d\n", status);
 
-      char *log = (char *)malloc (log_size);
+      size_t log_size = 0;
+      CHECK_CL (clGetProgramBuildInfo (program, device, CL_PROGRAM_BUILD_LOG,
+                                       0, NULL, &log_size));
 
-      clGetProgramBuildInfo (program, device, CL_PROGRAM_BUILD_LOG, log_size,
-                             log, NULL);
+      char *log = (char *)malloc (log_size + 1);
+      if (!log)
+        handle_error ("Failed to allocate memory for build log");
 
-      handle_error ("OpenCL program build failed:\n%s", log);
+      CHECK_CL (clGetProgramBuildInfo (program, device, CL_PROGRAM_BUILD_LOG,
+                                       log_size, log, NULL));
+      log[log_size] = '\0';
+
+      handle_error ("OpenCL program build failed (log size: %zu):\n%s",
+                    log_size, log);
       free (log);
     }
 }

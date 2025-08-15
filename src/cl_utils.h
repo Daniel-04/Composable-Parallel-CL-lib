@@ -10,6 +10,7 @@
 #define CL_TARGET_OPENCL_VERSION 300
 #endif
 #include <CL/cl.h>
+#include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -21,7 +22,7 @@
 /**
  * @brief Library error handler signature.
  */
-typedef void (*error_handler_fn) (const char *err, ...);
+typedef void (*error_handler_fn) (const char *err, va_list args);
 
 /**
  * @brief Sets the error handler used by the library.
