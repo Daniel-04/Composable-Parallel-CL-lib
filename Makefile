@@ -64,6 +64,9 @@ debug release static shared: all
 %: %.c all
 	$(CC) $(CFLAGS) $(INC_FLAGS) $< -o $@ $(LDLIBS)
 
+%/: all
+	@$(MAKE) $(patsubst %.c,%,$(shell find $* -name '*.c'))
+
 docs:
 	doxygen Doxyfile
 
