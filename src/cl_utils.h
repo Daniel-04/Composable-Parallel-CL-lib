@@ -143,7 +143,7 @@ void log_memory_limits (cl_device_id device);
 #define _LOG_MEMORY_LIMITS_ZERO(...) log_memory_limits (_device)
 #define _LOG_MEMORY_LIMITS_ONE(device) log_memory_limits (device)
 #define LOG_MEMORY_LIMITS(...)                                                \
-  _GETM_ONE (__VA_ARGS__, _LOG_MEMORY_LIMITS_ONE,                             \
+  _GETM_ONE (__VA_OPT__ (, ) _LOG_MEMORY_LIMITS_ONE,                          \
              _LOG_MEMORY_LIMITS_ZERO) (__VA_ARGS__)
 
 /**
@@ -152,11 +152,11 @@ void log_memory_limits (cl_device_id device);
  * @param device The cl_device to log for.
  */
 void log_work_limits (cl_device_id device);
-#define _LOG_WORK_LIMITS_ZERO(...) log_memory_limits (_device)
-#define _LOG_MEMORY_LIMITS_ONE(device) log_memory_limits (device)
-#define LOG_MEMORY_LIMITS(...)                                                \
-  _GETM_ONE (__VA_ARGS__, _LOG_MEMORY_LIMITS_ONE,                             \
-             _LOG_MEMORY_LIMITS_ZERO) (__VA_ARGS__)
+#define _LOG_WORK_LIMITS_ZERO(...) log_work_limits (_device)
+#define _LOG_WORK_LIMITS_ONE(device) log_work_limits (device)
+#define LOG_WORK_LIMITS(...)                                                  \
+  _GETM_ONE (__VA_OPT__ (, ) _LOG_WORK_LIMITS_ONE,                            \
+             _LOG_WORK_LIMITS_ZERO) (__VA_ARGS__)
 
 const char *_cl_err_to_str (cl_int err);
 void _check_cl (cl_int err, const char *expr, int line, const char *file);
