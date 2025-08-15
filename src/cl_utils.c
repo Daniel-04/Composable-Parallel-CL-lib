@@ -576,7 +576,7 @@ alloc_array (array_type type, cl_mem_flags flags, size_t dim1, size_t dim2,
   arr.host = malloc (size * membsize);
   if (!arr.host)
     {
-      handle_error ("Memory allocation error");
+      handle_error ("Failed to allocate memory for array");
     }
 
   arr.dim1 = dim1;
@@ -623,7 +623,7 @@ clone_array (array arr, cl_mem_flags flags)
   clone.host = malloc (ARRAY_SIZE (arr) * arr.membsize);
   if (!clone.host)
     {
-      handle_error ("Memory allocation error\n");
+      handle_error ("Failed to allocate memory for cloned array");
     }
   memcpy (clone.host, arr.host, ARRAY_SIZE (arr) * arr.membsize);
 
