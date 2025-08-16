@@ -117,17 +117,15 @@ void setup_cl (cl_platform_id *platform, cl_device_id *device,
                cl_context *context, cl_command_queue *queue,
                const cl_queue_properties *properties);
 
-#define _STR(x) #x
-#define _EXPAND(x) _STR (x)
 /**
  * @brief Stringify contents.
  *
- * Converts contents into a string after expanding macros.
- * Helpful to preserve syntax highlight when writing OpenCL kernels.
+ * Converts contents into a string. Helpful to preserve syntax highlight when
+ * writing OpenCL kernels.
  *
  * @param ... Contents to stringify.
  */
-#define RAW(...) _EXPAND (__VA_ARGS__)
+#define RAW(...) #__VA_ARGS__
 
 /**
  * @brief Reads the contents of an OpenCL source file.
@@ -253,8 +251,8 @@ int set_kernel_args (cl_kernel kernel, int num_args, ...);
 /**
  * @brief Set @ref array "arrays" as arguments to an OpenCL kernel.
  *
- * For each @ref array argument passed, sets its dimensions and device-side
- * buffer as a kernel argument.
+ * For up to three @ref array arguments passed, sets dimensions and device-side
+ * buffers as a kernel arguments.
  *
  * @param kernel OpenCL kernel to set arguments for.
  * @param ... List of up to three @ref array "arrays" to set as arguments.
