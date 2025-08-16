@@ -75,10 +75,11 @@ get_inner_product (const char *dtype, const char *op1, const char *op2)
   return kernel;
 }
 
-void
+unsigned long long
 inner_product (const char *op1, const char *op2, array A, array B, array C,
                cl_event *event)
 {
+  cl_event _event;
   const char *dtype = TYPE_STR_FROM_ENUM (C.type);
   char *src = get_inner_product (dtype, op1, op2);
   cl_kernel kernel = TRY_COMPILE_KERNEL (src);
@@ -90,5 +91,14 @@ inner_product (const char *op1, const char *op2, array A, array B, array C,
       = { LOWEST_MULTIPLE_OF_TILE (C.dim1), LOWEST_MULTIPLE_OF_TILE (C.dim2),
           LOWEST_MULTIPLE_OF_TILE (C.dim3) };
   CHECK_CL (clEnqueueNDRangeKernel (_queue, kernel, ARRAY_NUM_DIMS (C), NULL,
-                                    global_size, local_size, 0, NULL, event));
+                                    global_size, local_size, 0, NULL,
+                                    event ? event : &_event));
+
+  unsigned long long time = 0;
+  if (!event)
+    {
+      time = GET_CL_EVENT_TIME (_event);
+    }
+
+  return time;
 }

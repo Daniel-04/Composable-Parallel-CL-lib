@@ -19,26 +19,22 @@ main ()
       = { CL_QUEUE_PROPERTIES, CL_QUEUE_PROFILING_ENABLE, 0 };
   setup_cl (&platform, &device, &context, &queue, props);
 
-  int a1 = 93;
-  array A = ALLOC_ARRAY (int, CL_MEM_READ_ONLY, a1, 2);
+  int a1 = 4096;
+  array A = ALLOC_ARRAY (float, CL_MEM_READ_ONLY, a1, a1);
 
   int i = 0;
   for (; i < ARRAY_SIZE (A); i++)
     {
-      A.ints[i] = i;
+      A.floats[i] = (float)i;
     }
 
   SYNC_ARRAY_TO_DEVICE (A);
 
-  cl_event kernel_time;
-  SCAN ("+", A, &kernel_time);
-  LOG_CL_EVENT_TIME (kernel_time);
+  int time = SCAN ("+", A);
 
-  print_array (A);
+  printf ("Time taken %f ms\n", 1e-6 * time);
 
   SYNC_ARRAY_FROM_DEVICE (A);
-
-  print_array (A);
 
   free_array (A);
   CHECK_CL (clReleaseDevice (device));

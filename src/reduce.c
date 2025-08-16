@@ -67,7 +67,7 @@ get_reduce_1step (const char *dtype, const char *op1)
   return kernel;
 }
 
-void
+unsigned long long
 reduce (const char *op1, array A, cl_event *event)
 {
   const char *dtype = TYPE_STR_FROM_ENUM (A.type);
@@ -98,7 +98,19 @@ reduce (const char *op1, array A, cl_event *event)
                                         &partials[event_count++]));
     }
 
-  // FIXME: does not aggregate timing info
-  CHECK_CL (
-      clEnqueueMarkerWithWaitList (_queue, event_count, partials, event));
+  unsigned long long time = 0;
+  if (!event)
+    {
+      for (int i = 0; i < event_count; i++)
+        {
+          time = GET_CL_EVENT_TIME (partials[i]);
+        }
+    }
+  else
+    {
+      CHECK_CL (
+          clEnqueueMarkerWithWaitList (_queue, event_count, partials, event));
+    }
+
+  return time;
 }

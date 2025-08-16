@@ -5,7 +5,7 @@
 
 extern const char *_transpose_fmt;
 char *get_transpose (const char *dtype);
-void transpose (array A, array B, cl_event *event);
+unsigned long long transpose (array A, array B, cl_event *event);
 #define _TRANSPOSE_ONE(A, B) transpose (A, B, NULL);
 #define _TRANSPOSE_TWO(A, B, event) transpose (A, B, event)
 #define TRANSPOSE(...)                                                        \

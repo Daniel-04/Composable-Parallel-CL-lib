@@ -41,9 +41,10 @@ get_outer_product (const char *dtype, const char *op1)
   return kernel;
 }
 
-void
+unsigned long long
 outer_product (const char *op1, array A, array B, array C, cl_event *event)
 {
+  cl_event _event;
   const char *dtype = TYPE_STR_FROM_ENUM (C.type);
   char *src = get_outer_product (dtype, op1);
   cl_kernel kernel = TRY_COMPILE_KERNEL (src);
@@ -55,5 +56,14 @@ outer_product (const char *op1, array A, array B, array C, cl_event *event)
       = { LOWEST_MULTIPLE_OF_TILE (C.dim1), LOWEST_MULTIPLE_OF_TILE (C.dim2),
           LOWEST_MULTIPLE_OF_TILE (C.dim3) };
   CHECK_CL (clEnqueueNDRangeKernel (_queue, kernel, ARRAY_NUM_DIMS (C), NULL,
-                                    global_size, local_size, 0, NULL, event));
+                                    global_size, local_size, 0, NULL,
+                                    event ? event : &_event));
+
+  unsigned long long time = 0;
+  if (!event)
+    {
+      time = GET_CL_EVENT_TIME (_event);
+    }
+
+  return time;
 }

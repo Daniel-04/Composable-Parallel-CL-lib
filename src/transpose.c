@@ -113,9 +113,10 @@ get_transpose (const char *dtype)
   return kernel;
 }
 
-void
+unsigned long long
 transpose (array A, array B, cl_event *event)
 {
+  cl_event _event;
   const char *dtype = TYPE_STR_FROM_ENUM (B.type);
   char *src = get_transpose (dtype);
   cl_kernel kernel = TRY_COMPILE_KERNEL (src);
@@ -127,5 +128,14 @@ transpose (array A, array B, cl_event *event)
       = { LOWEST_MULTIPLE_OF_TILE (B.dim1), LOWEST_MULTIPLE_OF_TILE (B.dim2),
           LOWEST_MULTIPLE_OF_TILE (B.dim3) };
   CHECK_CL (clEnqueueNDRangeKernel (_queue, kernel, ARRAY_NUM_DIMS (B), NULL,
-                                    global_size, local_size, 0, NULL, event));
+                                    global_size, local_size, 0, NULL,
+                                    event ? event : &_event));
+
+  unsigned long long time = 0;
+  if (!event)
+    {
+      time = GET_CL_EVENT_TIME (_event);
+    }
+
+  return time;
 }

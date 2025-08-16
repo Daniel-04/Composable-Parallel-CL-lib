@@ -5,7 +5,7 @@
 
 extern const char *_reduce_1step_fmt;
 char *get_reduce_1step (const char *dtype, const char *op1);
-void reduce (const char *op1, array A, cl_event *event);
+unsigned long long reduce (const char *op1, array A, cl_event *event);
 #define _REDUCE_ONE(op1, A) reduce (op1, A, NULL);
 #define _REDUCE_TWO(op1, A, event) reduce (op1, A, event)
 #define REDUCE(...)                                                           \
