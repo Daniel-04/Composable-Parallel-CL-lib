@@ -2,6 +2,7 @@
 #include "cl_utils.h"
 #include <stdio.h>
 
+// TODO: avoid identity elements
 /* Format strings:
 ** 1. A type
 ** 2. B type
@@ -54,10 +55,11 @@ const char *_inner_product_fmt = RAW (__kernel void entry (
 });
 
 char *
-get_inner_product (const char *dtype, const char *op1, const char *op2)
+get_inner_product (const char *atype, const char *btype, const char *ctype,
+                   const char *op1, const char *op2)
 {
-  int size = snprintf (NULL, 0, _inner_product_fmt, dtype, dtype, dtype,
-                       _tile_size, dtype, dtype, dtype, op1, op2);
+  int size = snprintf (NULL, 0, _inner_product_fmt, atype, btype, ctype,
+                       _tile_size, atype, btype, ctype, op1, op2);
 
   char *kernel = malloc (size + 1);
   if (!kernel)
@@ -65,8 +67,8 @@ get_inner_product (const char *dtype, const char *op1, const char *op2)
       handle_error ("Failed to allocate memory for kernel string");
     }
 
-  int count = snprintf (kernel, size + 1, _inner_product_fmt, dtype, dtype,
-                        dtype, _tile_size, dtype, dtype, dtype, op1, op2);
+  int count = snprintf (kernel, size + 1, _inner_product_fmt, atype, btype,
+                        ctype, _tile_size, atype, btype, ctype, op1, op2);
   if (count == -1)
     {
       handle_error ("Failed to print to kernel string");
@@ -80,8 +82,9 @@ inner_product (const char *op1, const char *op2, array A, array B, array C,
                cl_event *event)
 {
   cl_event _event;
-  const char *dtype = TYPE_STR_FROM_ENUM (C.type);
-  char *src = get_inner_product (dtype, op1, op2);
+  char *src = get_inner_product (TYPE_STR_FROM_ENUM (A.type),
+                                 TYPE_STR_FROM_ENUM (B.type),
+                                 TYPE_STR_FROM_ENUM (C.type), op1, op2);
   cl_kernel kernel = TRY_COMPILE_KERNEL (src);
   free (src);
   SET_KERNEL_ARGS (kernel, A, B, C);
