@@ -3,11 +3,13 @@
 #include <stdio.h>
 
 /* Format strings:
- * 1. A type
- * 2. TILE_SIZE
- * 3. A_tile type
- * 4. OP1
- */
+** 1. A type
+** 2. TILE_SIZE
+** 3. A_tile type
+** 4. A type
+** 5. A type
+** 6. OP1
+*/
 const char *_partial_scan_fmt = RAW (__kernel void entry (
     const int a1, const int a2, const int a3, __global % s * A) {
   int row = get_global_id (1);
@@ -27,9 +29,9 @@ const char *_partial_scan_fmt = RAW (__kernel void entry (
         {
           if (local_col >= offset)
             {
-              A_tile[local_row][local_col]
-                  = A_tile[local_row][local_col]
-                    % s A_tile[local_row][local_col - offset];
+              % s a = A_tile[local_row][local_col];
+              % s b = A_tile[local_row][local_col - offset];
+              A_tile[local_row][local_col] = % s;
             }
           barrier (CLK_LOCAL_MEM_FENCE);
         }
@@ -44,7 +46,8 @@ const char *_partial_scan_fmt = RAW (__kernel void entry (
 /* Format strings:
  * 1. A type
  * 2. partial type
- * 3. OP1
+ * 3. A type
+ * 4. OP1
  */
 const char *_propagate_scan_fmt = RAW (__kernel void entry (
     const int a1, const int a2, const int a3, __global % s * A, int stride) {
@@ -56,21 +59,22 @@ const char *_propagate_scan_fmt = RAW (__kernel void entry (
 
   int group_row = get_group_id (1);
   int group_col = get_group_id (0);
-  __local % s partial;
+  __local % s b;
 
   int chunk = col / stride;
   if (col > stride - 1 && col < a1 && row < a2 && chunk & 1 != 0)
     {
-      partial = A[(col / stride) * stride - 1 + (a1 * row)];
-      A[col + a1 * row] = A[col + a1 * row] % s partial;
+      % s a = A[col + a1 * row];
+      b = A[(col / stride) * stride - 1 + (a1 * row)];
+      A[col + a1 * row] = % s;
     }
 });
 
 char *
 get_partial_scan (const char *dtype, const char *op1)
 {
-  int size
-      = snprintf (NULL, 0, _partial_scan_fmt, dtype, _tile_size, dtype, op1);
+  int size = snprintf (NULL, 0, _partial_scan_fmt, dtype, _tile_size, dtype,
+                       dtype, dtype, op1);
 
   char *kernel = malloc (size + 1);
   if (!kernel)
@@ -79,7 +83,7 @@ get_partial_scan (const char *dtype, const char *op1)
     }
 
   int count = snprintf (kernel, size + 1, _partial_scan_fmt, dtype, _tile_size,
-                        dtype, op1);
+                        dtype, dtype, dtype, op1);
   if (count == -1)
     {
       handle_error ("Failed to print to kernel string");
@@ -91,7 +95,7 @@ get_partial_scan (const char *dtype, const char *op1)
 char *
 get_propagate_scan (const char *dtype, const char *op1)
 {
-  int size = snprintf (NULL, 0, _propagate_scan_fmt, dtype, dtype, op1);
+  int size = snprintf (NULL, 0, _propagate_scan_fmt, dtype, dtype, dtype, op1);
 
   char *kernel = malloc (size + 1);
   if (!kernel)
@@ -99,8 +103,8 @@ get_propagate_scan (const char *dtype, const char *op1)
       handle_error ("Failed to allocate memory for kernel string");
     }
 
-  int count
-      = snprintf (kernel, size + 1, _propagate_scan_fmt, dtype, dtype, op1);
+  int count = snprintf (kernel, size + 1, _propagate_scan_fmt, dtype, dtype,
+                        dtype, op1);
   if (count == -1)
     {
       handle_error ("Failed to print to kernel string");
