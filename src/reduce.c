@@ -3,11 +3,13 @@
 #include <stdio.h>
 
 /* Format strings:
- * 1. A type
- * 2. TILE_SIZE
- * 3. A_tile type
- * 4. OP1
- */
+** 1. A type
+** 2. TILE_SIZE
+** 3. A_tile type
+** 4. A type
+** 5. A type
+** 6. OP1
+*/
 const char *_reduce_1step_fmt = RAW (__kernel void entry (
     const int a1, const int a2, const int a3, __global % s * A) {
   int row = get_global_id (1);
@@ -30,9 +32,9 @@ const char *_reduce_1step_fmt = RAW (__kernel void entry (
         {
           if (local_col < offset && (col + offset) < a1)
             {
-              A_tile[local_row][local_col]
-                  = A_tile[local_row][local_col]
-                    % s A_tile[local_row][local_col + offset];
+              % s a = A_tile[local_row][local_col];
+              % s b = A_tile[local_row][local_col + offset];
+              A_tile[local_row][local_col] = % s;
             }
 
           barrier (CLK_LOCAL_MEM_FENCE);
@@ -48,8 +50,8 @@ const char *_reduce_1step_fmt = RAW (__kernel void entry (
 char *
 get_reduce_1step (const char *dtype, const char *op1)
 {
-  int size
-      = snprintf (NULL, 0, _reduce_1step_fmt, dtype, _tile_size, dtype, op1);
+  int size = snprintf (NULL, 0, _reduce_1step_fmt, dtype, _tile_size, dtype,
+                       dtype, dtype, op1);
 
   char *kernel = malloc (size + 1);
   if (!kernel)
@@ -58,7 +60,7 @@ get_reduce_1step (const char *dtype, const char *op1)
     }
 
   int count = snprintf (kernel, size + 1, _reduce_1step_fmt, dtype, _tile_size,
-                        dtype, op1);
+                        dtype, dtype, dtype, op1);
   if (count == -1)
     {
       handle_error ("Failed to print to kernel string");
