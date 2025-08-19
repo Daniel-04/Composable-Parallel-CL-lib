@@ -18,7 +18,6 @@ const char *_transpose_fmt = RAW (__kernel void entry (
   int local_col = get_local_id (0);
   const int tile_size = % d;
 
-  // Avoid aligning rows (+1) to reduce memory bank conflicts
   __local % s A_tile[tile_size][tile_size + 1];
 
   if (col < a1 && row < a2)
@@ -35,61 +34,6 @@ const char *_transpose_fmt = RAW (__kernel void entry (
       B[transposed_row * b1 + transposed_col] = A_tile[local_col][local_row];
     }
 });
-
-/* const char *_transpose_fmt = RAW (__kernel void entry ( */
-/*     const int a1, const int a2, const int a3, __global const % s * A, */
-/*     const int b1, const int b2, const int b3, __global % s * B) { */
-/*   int row = get_global_id (1); */
-/*   int col = get_global_id (0); */
-
-/*   int local_row = get_local_id (1); */
-/*   int local_col = get_local_id (0); */
-/*   const int tile_size = % d; */
-
-/*   __local % s A_tile[tile_size][tile_size]; */
-
-/*   if (col < a1 && row < a2) */
-/*     { */
-/*       A_tile[local_row][local_col] = A[row * a1 + col]; */
-/*     } */
-/*   barrier (CLK_LOCAL_MEM_FENCE); */
-
-/*   int transposed_col = get_group_id (1) * tile_size + local_col; */
-/*   int transposed_row = get_group_id (0) * tile_size + local_row; */
-
-/*   if (transposed_col < a2 && transposed_row < a1) */
-/*     { */
-/*       B[transposed_row * b1 + transposed_col] =
- * A_tile[local_col][local_row]; */
-/*     } */
-/* }); */
-
-/* const char *_transpose_fmt = RAW (__kernel void entry ( */
-/*     const int a1, const int a2, const int a3, __global const % s * A, */
-/*     const int b1, const int b2, const int b3, __global % s * B) { */
-/*   int row = get_global_id (1); */
-/*   int col = get_global_id (0); */
-
-/*   int local_row = get_local_id (1); */
-/*   int local_col = get_local_id (0); */
-/*   const int tile_size = % d; */
-
-/*   __local % s A_tile[tile_size][tile_size]; */
-
-/*   if (col < a1 && row < a2) */
-/*     { */
-/*       A_tile[local_row][local_col] = A[row * a1 + col]; */
-/*     } */
-/*   barrier (CLK_LOCAL_MEM_FENCE); */
-
-/*   int transposed_col = row; */
-/*   int transposed_row = col; */
-/*   if (transposed_col < b1 && transposed_row < b2) */
-/*     { */
-/*       B[transposed_row * b1 + transposed_col] =
- * A_tile[local_row][local_col]; */
-/*     } */
-/* }); */
 
 char *
 get_transpose (const char *dtype)
