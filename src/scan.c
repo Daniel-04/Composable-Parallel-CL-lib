@@ -148,17 +148,19 @@ scan (const char *op1, array A, cl_event *event)
     }
 
   unsigned long long time = 0;
-  if (!event)
-    {
-      for (int i = 0; i < event_count; i++)
-        {
-          time = GET_CL_EVENT_TIME (partials[i]);
-        }
-    }
-  else
+  cl_command_queue_properties props = 0;
+  CHECK_CL (clGetCommandQueueInfo (_queue, CL_QUEUE_PROPERTIES, sizeof (props),
+                                   &props, NULL));
+  if (event || !(props & CL_QUEUE_PROFILING_ENABLE))
     {
       CHECK_CL (
           clEnqueueMarkerWithWaitList (_queue, event_count, partials, event));
+      return time;
+    }
+
+  for (int i = 0; i < event_count; i++)
+    {
+      time += GET_CL_EVENT_TIME (partials[i]);
     }
 
   return time;

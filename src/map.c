@@ -65,10 +65,13 @@ map (const char *op1, array A, array B, cl_event *event)
                                     event ? event : &_event));
 
   unsigned long long time = 0;
-  if (!event)
-    {
-      time = GET_CL_EVENT_TIME (_event);
-    }
+  cl_command_queue_properties props = 0;
+  CHECK_CL (clGetCommandQueueInfo (_queue, CL_QUEUE_PROPERTIES, sizeof (props),
+                                   &props, NULL));
+  if (event || !(props & CL_QUEUE_PROFILING_ENABLE))
+    return time;
+
+  time = GET_CL_EVENT_TIME (_event);
 
   return time;
 }
