@@ -72,6 +72,14 @@ setup_cl (cl_platform_id *platform, cl_device_id *device, cl_context *context,
   copy_cl_pipeline (platform, device, context, queue); // For library use
 }
 
+void
+release_cl (cl_device_id *device, cl_context *context, cl_command_queue *queue)
+{
+  CHECK_CL (clReleaseCommandQueue (*queue));
+  CHECK_CL (clReleaseContext (*context));
+  CHECK_CL (clReleaseDevice (*device));
+}
+
 char *
 read_cl_file (const char *filename)
 {

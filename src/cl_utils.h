@@ -118,6 +118,18 @@ void setup_cl (cl_platform_id *platform, cl_device_id *device,
                const cl_queue_properties *properties);
 
 /**
+ * @brief Releases OpenCL device, context, and command queue.
+ *
+ * Releases the given OpenCL environment.
+ *
+ * @param device Pointer to a cl_device_id that will be released
+ * @param context Pointer to a cl_context that will be released
+ * @param queue Pointer to a cl_command_queue that will be released
+ */
+void release_cl (cl_device_id *device, cl_context *context,
+                 cl_command_queue *queue);
+
+/**
  * @brief Stringify contents.
  *
  * Converts contents into a string. Helpful to preserve syntax highlight when
