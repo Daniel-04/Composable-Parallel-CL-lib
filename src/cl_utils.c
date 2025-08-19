@@ -691,7 +691,8 @@ print_array (array arr)
                           arr.doubles[i + arr.dim1 * (j + arr.dim2 * k)]);
                   break;
                 default:
-                  handle_error ("Unknown element type trying to print array");
+                  handle_error (
+                      "Unimplemented element type trying to print array");
                 }
             }
           printf (" ],\r[\n");
