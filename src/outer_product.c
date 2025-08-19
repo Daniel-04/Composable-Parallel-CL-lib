@@ -9,8 +9,8 @@
 ** 4. TILE_SIZE
 ** 5. A_tile type
 ** 6. B_tile type
-** 7. A type
-** 8. B type
+** 7. a type
+** 8. b type
 ** 9. OP1
 */
 const char *_outer_product_fmt = RAW (__kernel void entry (

@@ -5,8 +5,8 @@
 /* Format strings:
  ** 1. A type
  ** 2. B type
- ** 3. A type
- ** 4. B type
+ ** 3. a type
+ ** 4. b type
  ** 5. OP1
  */
 const char *_map_fmt = RAW (__kernel void entry (

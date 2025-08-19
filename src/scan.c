@@ -6,8 +6,8 @@
 ** 1. A type
 ** 2. TILE_SIZE
 ** 3. A_tile type
-** 4. A type
-** 5. A type
+** 4. a type
+** 5. b type
 ** 6. OP1
 */
 const char *_partial_scan_fmt = RAW (__kernel void entry (
@@ -45,8 +45,8 @@ const char *_partial_scan_fmt = RAW (__kernel void entry (
 
 /* Format strings:
  * 1. A type
- * 2. partial type
- * 3. A type
+ * 2. b type
+ * 3. a type
  * 4. OP1
  */
 const char *_propagate_scan_fmt = RAW (__kernel void entry (
