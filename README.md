@@ -50,3 +50,15 @@ The `array` struct is the main data container.
   * `SYNC_ARRAY_TO_DEVICE()`: Copies data from the host buffer to the device buffer.
   * `SYNC_ARRAY_FROM_DEVICE()`: Copies data from the device buffer to the host buffer.
   * `ARRAY_SIZE()`: A macro that returns the total number of elements in an `array`.
+
+-----
+
+## Animations
+
+`animations.py` contains a number of manim animations demonstrating some
+optimisations of present in the included kernels.
+
+after installing manim, these can be run with:
+``` sh
+manim -pqk animations.py
+```
