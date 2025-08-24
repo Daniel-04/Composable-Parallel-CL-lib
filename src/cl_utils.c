@@ -574,15 +574,40 @@ _log_cl_event_time (cl_event event, const char *expr)
   CHECK_CL (clReleaseEvent (event));
 }
 
+static int
+mul_safe (size_t a, size_t b, size_t *result)
+{
+  if (a == 0 || b == 0)
+    {
+      *result = 0;
+      return 0;
+    }
+  if (a > SIZE_MAX / b)
+    {
+      return 1;
+    }
+  *result = a * b;
+  return 0;
+}
+
 array
 alloc_array (array_type type, cl_mem_flags flags, size_t dim1, size_t dim2,
              size_t dim3)
 {
   array arr;
-  size_t size = dim1 * dim2 * dim3;
   size_t membsize = SIZE_FROM_ENUM (type);
+  size_t size = 0;
+  size_t total = 0;
+  size_t tmp;
+  if (mul_safe (dim1, dim2, &tmp) || mul_safe (tmp, dim3, &size)
+      || mul_safe (size, membsize, &total))
+    {
+      handle_error ("Overflow detected during size calculation for dims %d %d "
+                    "%d and type %s (%d bytes)",
+                    dim1, dim2, dim3, TYPE_STR_FROM_ENUM (type), membsize);
+    }
 
-  arr.host = malloc (size * membsize);
+  arr.host = malloc (total);
   if (!arr.host)
     {
       handle_error ("Failed to allocate memory for array");
