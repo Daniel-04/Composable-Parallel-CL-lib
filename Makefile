@@ -27,7 +27,7 @@ INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 LDFLAGS ?=
 LDLIBS := -lOpenCL
 EXTRA_LDLIBS ?=
-CLBLAST_AVAILABLE := $(shell ld -lclblast --verbose >/dev/null 2>&1 && echo yes || echo no)
+CLBLAST_AVAILABLE := $(shell ldconfig -p | grep -q libclblast && echo yes || echo no)
 ifeq ($(CLBLAST_AVAILABLE),yes)
 	EXTRA_LDLIBS += -lclblast
 endif
