@@ -1,7 +1,18 @@
+/*
+** Reffer to bench/unreliable_timings_with_nvidia_drivers.c as to why I am not
+** using queue profiling in these benchmarks.
+**
+** Reffer to bench/mmul.c and bench/mmul_wall.c for convincing that clFinish +
+** wall clock timings and queue profiling are accurate enough to be compared
+** somewhat fairly.
+*/
+#include <CL/cl.h>
+#include <bits/time.h>
 #include <cl_utils.h>
-#include <reduce.h>
+#include <clblast_c.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 #define WARMUP_ITERS 100
 #define ITERS 1000
@@ -13,9 +24,7 @@ main (int argc, const char **argv)
   cl_device_id device;
   cl_context context;
   cl_command_queue queue;
-  const cl_queue_properties props[]
-      = { CL_QUEUE_PROPERTIES, CL_QUEUE_PROFILING_ENABLE, 0 };
-  setup_cl (&platform, &device, &context, &queue, props);
+  setup_cl (&platform, &device, &context, &queue, NULL);
 
   if (argc != 2)
     {
@@ -25,6 +34,7 @@ main (int argc, const char **argv)
 
   int n = atoi (argv[1]);
   array A = ALLOC_ARRAY (float, CL_MEM_READ_WRITE, n);
+  array output = ALLOC_ARRAY (float, CL_MEM_READ_WRITE, 1);
   int i = 0;
   for (; i < ARRAY_SIZE (A); i++)
     {
@@ -32,14 +42,24 @@ main (int argc, const char **argv)
     }
   SYNC_ARRAY_TO_DEVICE (A);
 
+  clFinish (queue);
   unsigned long long total = 0;
+  struct timespec start, end;
   for (int i = 0; i < WARMUP_ITERS; i++)
     {
-      REDUCE ("a + b", A);
+      CLBlastSasum (n, output.device, 0, A.device, 0, 1, &queue, NULL);
+      clFinish (queue);
     }
   for (int i = 0; i < ITERS; i++)
     {
-      total += REDUCE ("a + b", A);
+      clock_gettime (CLOCK_MONOTONIC, &start);
+      CLBlastSasum (n, output.device, 0, A.device, 0, 1, &queue, NULL);
+      clFinish (queue);
+      clock_gettime (CLOCK_MONOTONIC, &end);
+      long seconds = end.tv_sec - start.tv_sec;
+      long nanoseconds = end.tv_nsec - start.tv_nsec;
+      long elapsed = seconds * 1000000000L + nanoseconds;
+      total += elapsed;
     }
   printf ("%d Iterations with %d array of %s(%zu bytes)\n", ITERS, n,
           TYPE_STR_FROM_ENUM (A.type), SIZE_FROM_ENUM (A.type));
