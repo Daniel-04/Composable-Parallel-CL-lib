@@ -25,9 +25,13 @@ EXTRA_INC_DIRS ?=
 INC_DIRS := $(shell find $(SRC_DIR) -type d) $(EXTRA_INC_DIRS)
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 LDFLAGS ?=
-LDLIBS := $(shell pkg-config --libs OpenCL)
+LDLIBS := -lOpenCL
 EXTRA_LDLIBS ?=
-EXTRA_LDLIBS += -lclblast -lm
+CLBLAST_AVAILABLE := $(shell ld -lclblast --verbose >/dev/null 2>&1 && echo yes || echo no)
+ifeq ($(CLBLAST_AVAILABLE),yes)
+	EXTRA_LDLIBS += -lclblast
+endif
+EXTRA_LDLIBS += -lm
 CFLAGS := -Wall -Wextra
 ifeq ($(BUILD),debug)
 	CFLAGS += -g3
