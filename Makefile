@@ -27,7 +27,7 @@ INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 LDFLAGS ?=
 LDLIBS := $(shell pkg-config --libs OpenCL)
 EXTRA_LDLIBS ?=
-EXTRA_LDLIBS += -lclblast
+EXTRA_LDLIBS += -lclblast -lm
 CFLAGS := -Wall -Wextra
 ifeq ($(BUILD),debug)
 	CFLAGS += -g3
