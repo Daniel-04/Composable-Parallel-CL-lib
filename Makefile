@@ -21,10 +21,13 @@ OBJS := $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o,$(SRCS))
 
 CC := gcc
 AR := ar
-INC_DIRS := $(shell find $(SRC_DIR) -type d)
+EXTRA_INC_DIRS ?=
+INC_DIRS := $(shell find $(SRC_DIR) -type d) $(EXTRA_INC_DIRS)
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
-LDFLAGS :=
+LDFLAGS ?=
 LDLIBS := $(shell pkg-config --libs OpenCL)
+EXTRA_LDLIBS ?=
+EXTRA_LDLIBS += -lclblast
 CFLAGS := -Wall -Wextra
 ifeq ($(BUILD),debug)
 	CFLAGS += -g3
@@ -53,7 +56,7 @@ endif
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
 	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(INC_FLAGS) -c $< -o $@
 
 clean:
 	rm -rf $(BUILD_DIR)
@@ -62,7 +65,7 @@ debug release static shared: all
 	@true
 
 %: %.c all
-	$(CC) $(CFLAGS) $(INC_FLAGS) $< -o $@ $(LDLIBS)
+	$(CC) $(CFLAGS) $(EXTRA_LDLIBS) $(LDLIBS) $(INC_FLAGS) $< -o $@ $(LDLIBS)
 
 %/: all
 	@$(MAKE) $(patsubst %.c,%,$(shell find $* -name '*.c'))
