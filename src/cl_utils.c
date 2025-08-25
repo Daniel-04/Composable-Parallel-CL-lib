@@ -704,17 +704,12 @@ print_array (array arr)
             {
               switch (arr.type)
                 {
-                case TYPE_INT:
-                  printf (", %d", arr.ints[i + arr.dim1 * (j + arr.dim2 * k)]);
-                  break;
-                case TYPE_FLOAT:
-                  printf (", %f",
-                          arr.floats[i + arr.dim1 * (j + arr.dim2 * k)]);
-                  break;
-                case TYPE_DOUBLE:
-                  printf (", %lf",
-                          arr.doubles[i + arr.dim1 * (j + arr.dim2 * k)]);
-                  break;
+#define X(_, enum_name, name, format)                                         \
+  case enum_name:                                                             \
+    printf (", " format, arr.name[i + arr.dim1 * (j + arr.dim2 * k)]);        \
+    break;
+                  _TYPE_LIST
+#undef X
                 default:
                   handle_error (
                       "Unimplemented element type trying to print array");
