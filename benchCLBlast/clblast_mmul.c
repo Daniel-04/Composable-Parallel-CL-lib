@@ -7,7 +7,6 @@
 ** somewhat fairly.
 */
 #include <CL/cl.h>
-#include <bits/time.h>
 #include <cl_utils.h>
 #include <clblast_c.h>
 #include <stdio.h>

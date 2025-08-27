@@ -27,7 +27,7 @@ INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 LDFLAGS ?=
 LDLIBS := -lOpenCL
 EXTRA_LDLIBS ?=
-EXTRA_LDLIBS += -lm -lclblast
+EXTRA_LDLIBS += -lm
 CFLAGS := -Wall -Wextra
 ifeq ($(BUILD),debug)
 	CFLAGS += -g3
