@@ -27,11 +27,7 @@ INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 LDFLAGS ?=
 LDLIBS := -lOpenCL
 EXTRA_LDLIBS ?=
-CLBLAST_AVAILABLE := $(shell ldconfig -p | grep -q libclblast && echo yes || echo no)
-ifeq ($(CLBLAST_AVAILABLE),yes)
-	EXTRA_LDLIBS += -lclblast
-endif
-EXTRA_LDLIBS += -lm
+EXTRA_LDLIBS += -lm -lclblast
 CFLAGS := -Wall -Wextra
 ifeq ($(BUILD),debug)
 	CFLAGS += -g3

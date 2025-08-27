@@ -16,22 +16,29 @@
 
 module load nvhpc
 
-export LD_LIBRARY_PATH=/opt/apps/pkg/compilers/cuda/12.6.2/targets/x86_64-linux/lib/:$LD_LIBRARY_PATH
+CL_PATH=/opt/apps/pkg/compilers/cuda/12.6.2/targets/x86_64-linux
+
+export LD_LIBRARY_PATH=$CL_PATH/lib:$LD_LIBRARY_PATH
+export LIBRARY_PATH=$CL_PATH/lib:$LIBRARY_PATH
+export C_INCLUDE_PATH=$CL_PATH/include:$C_INCLUDE_PATH
 
 if [ ! -d "CLBlast" ]; then
     git clone https://github.com/CNugteren/CLBlast
     cd CLBlast
     mkdir build install
     cd build
-    cmake -DCMAKE_INSTALL_PREFIX=../install ..
+    cmake -DCMAKE_INSTALL_PREFIX=../install -DOPENCL_ROOT=$CL_PATH ..
     make -j"$(nproc)"
     make install
     cd ../../
 fi
 
-export LD_LIBRARY_PATH=./CLBlast/install/lib64/:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=./CLBlast/install/lib64:$LD_LIBRARY_PATH
+export LIBRARY_PATH=./CLBlast/install/lib64:$LIBRARY_PATH
+export C_INCLUDE_PATH=./CLBlast/install/include:$C_INCLUDE_PATH
 
-make examples/ bench/ EXTRA_INC_DIRS=./CLBlast/install/include/
+INC_FLAGS=$(echo "$C_INCLUDE_PATH" | tr ':' ' ')
+make examples/ bench/ EXTRA_INC_DIRS="$INC_FLAGS"
 
 ./examples/info
 
