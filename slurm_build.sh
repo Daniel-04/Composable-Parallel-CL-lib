@@ -49,6 +49,4 @@ for bench in benchOpenACC/*; do
     nvc -acc -O3 -fast -o "${bench%.c}" "$bench"
 done
 
-./examples/info
-
 # This work made use of the Barkla High Performance Computing facilities at the University of Liverpool.
