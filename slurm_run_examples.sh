@@ -2,7 +2,7 @@
 #SBATCH -D ./
 #SBATCH --export=ALL
 
-#SBATCH -J BUILD
+#SBATCH -J EXAMPLES
 
 #SBATCH -o OUTPUT.%j.%a
 #SBATCH -e ERROR.%j.%a
