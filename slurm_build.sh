@@ -42,7 +42,7 @@ export LIBRARY_PATH=./CLBlast/install/lib64:$LIBRARY_PATH
 export C_INCLUDE_PATH=./CLBlast/install/include:$C_INCLUDE_PATH
 INC_FLAGS=$(echo "$C_INCLUDE_PATH" | tr ':' ' ')
 # CLBlast benchs
-make clean benchCLBlast/ EXTRA_INC_DIRS="$INC_FLAGS" EXTRA_LD_LIBS="-L./CLBlast/install/lib64 -lclblast"
+make clean benchCLBlast/ EXTRA_INC_DIRS="$INC_FLAGS" EXTRA_LDLIBS="-L./CLBlast/install/lib64 -lclblast"
 
 # OpenACC benchs
 for bench in benchOpenACC/*; do
